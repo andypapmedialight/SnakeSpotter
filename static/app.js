@@ -322,14 +322,11 @@
   els.form.addEventListener("submit", async (event) => {
     event.preventDefault();
     els.formError.hidden = true;
-    const species = els.species.value.trim();
+    const rawSpecies = els.species.value.trim();
+    const species =
+      !rawSpecies || rawSpecies.toLowerCase() === "unsure" ? "Unsure" : rawSpecies;
     const latitude = Number(els.latitude.value);
     const longitude = Number(els.longitude.value);
-    if (!species) {
-      els.formError.textContent = "Species is required.";
-      els.formError.hidden = false;
-      return;
-    }
     if (!els.observedAt.value) {
       els.formError.textContent = "Observed time is required.";
       els.formError.hidden = false;

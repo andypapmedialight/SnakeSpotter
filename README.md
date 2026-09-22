@@ -54,7 +54,7 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 
 ## What you can do
 
-- Log a sighting (species, notes, datetime, lat/lng)
+- Log a sighting (species or Unsure, notes, datetime, lat/lng)
 - See every sighting in a list
 - Open a sighting and jump to its pin
 - Click the map to drop a pin when Maps is available

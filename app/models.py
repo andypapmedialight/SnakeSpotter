@@ -2,20 +2,24 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+UNSURE_SPECIES = "Unsure"
+
 
 class SightingCreate(BaseModel):
-    species: str = Field(..., min_length=1, max_length=120)
+    species: str = Field(default=UNSURE_SPECIES, max_length=120)
     notes: str = Field(default="", max_length=4000)
     observed_at: datetime
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
 
-    @field_validator("species")
+    @field_validator("species", mode="before")
     @classmethod
-    def strip_species(cls, value: str) -> str:
-        cleaned = value.strip()
-        if not cleaned:
-            raise ValueError("Species is required")
+    def normalize_species(cls, value: object) -> str:
+        if value is None:
+            return UNSURE_SPECIES
+        cleaned = str(value).strip()
+        if not cleaned or cleaned.casefold() == UNSURE_SPECIES.casefold():
+            return UNSURE_SPECIES
         return cleaned
 
     @field_validator("notes")

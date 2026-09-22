@@ -241,6 +241,13 @@ code {
   line-height: 1.45;
 }
 
+.field-hint {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 .btn {
   appearance: none;
   border: 0;
