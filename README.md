@@ -60,7 +60,7 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 - Open a sighting and jump to its pin
 - Click the map around Edgars Creek, Coburg North to drop a pin
 
-The map stays on that creek corridor, down to De Chene Reserve. Pins outside the area are rejected.
+The map stays on that creek corridor, from Photography Drive down to Bell Street. Pins outside the area are rejected.
 
 The species list is snakes recorded around Edgars Creek and inner-north Melbourne: Eastern Brown, Tiger, Lowland Copperhead, Red-bellied Black, White-lipped, Little Whip, and Small-eyed. Unsure is always available. Identification photos are Wikimedia Commons files; credits sit under each picture.
 
