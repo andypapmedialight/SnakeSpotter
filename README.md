@@ -36,9 +36,9 @@ Then push `main` (or run **Actions → Deploy**) so CI installs the env file. If
 
 ## Anthemic Hub
 
-Public URL: [https://anthemic-developments.com/snakespotter/](https://anthemic-developments.com/snakespotter/)
+Public URL: [https://snakespot.anthemic-developments.com/](https://snakespot.anthemic-developments.com/)
 
-Push to `main` → GitHub Actions rsyncs into `/home/deploy/incoming-snakespotter/` → `sudo /usr/local/bin/snakespotter-deploy-apply.sh` promotes into `/opt/snakespotter`, SQLite at `/var/lib/snakespotter/sightings.db`, systemd `snakespotter.service` on `127.0.0.1:8075`. nginx in **anthemic-ops** proxies `/snakespotter/`.
+Push to `main` → GitHub Actions rsyncs into `/home/deploy/incoming-snakespotter/` → `sudo /usr/local/bin/snakespotter-deploy-apply.sh` promotes into `/opt/snakespotter`, SQLite at `/var/lib/snakespotter/sightings.db`, systemd `snakespotter.service` on `127.0.0.1:8075`. nginx in **anthemic-ops** proxies the `snakespot.anthemic-developments.com` subdomain. The old path `/snakespotter/` redirects there.
 
 One-time droplet bootstrap (from GitHub, as root):
 

@@ -112,10 +112,10 @@ jobs:
             'curl -fsS --max-time 5 http://127.0.0.1:8075/health | grep -q "\"ok\""' \
             || { echo "loopback /health failed"; exit 1; }
           code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 10 \
-            "https://anthemic-developments.com/snakespotter/" || echo "000")
+            "https://snakespot.anthemic-developments.com/health" || echo "000")
           if [[ "${code}" == "200" ]]; then
-            echo "public /snakespotter/ 200"
-            curl -fsS --max-time 10 "https://anthemic-developments.com/snakespotter/api/config" | grep -q 'maps_enabled'
+            echo "public https://snakespot.anthemic-developments.com/health 200"
+            curl -fsS --max-time 10 "https://snakespot.anthemic-developments.com/api/config" | grep -q 'maps_enabled'
           else
-            echo "public HTTPS not ready yet (HTTP ${code}) — loopback is healthy; finish anthemic-ops nginx"
+            echo "public HTTPS not ready yet (HTTP ${code}) — loopback is healthy; finish anthemic-ops nginx + DNS/cert"
           fi

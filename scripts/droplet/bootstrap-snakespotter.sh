@@ -69,5 +69,19 @@ EOF
 chmod 440 /etc/sudoers.d/deploy-snakespotter
 visudo -cf /etc/sudoers.d/deploy-snakespotter
 
+if [[ ! -f /etc/letsencrypt/live/snakespot.anthemic-developments.com/fullchain.pem ]]; then
+  if ! command -v certbot >/dev/null 2>&1; then
+    echo "bootstrap-snakespotter: install certbot, then re-run, or run:" >&2
+    echo "  certbot certonly --webroot -w /var/www/html -d snakespot.anthemic-developments.com" >&2
+  else
+    echo "bootstrap-snakespotter: requesting Let's Encrypt cert (DNS must already point here)"
+    certbot certonly --webroot -w /var/www/html -d snakespot.anthemic-developments.com \
+      --non-interactive --agree-tos --keep-until-expiring || {
+      echo "bootstrap-snakespotter: certbot failed. Add the Cloudflare A record, then:" >&2
+      echo "  certbot certonly --webroot -w /var/www/html -d snakespot.anthemic-developments.com" >&2
+    }
+  fi
+fi
+
 echo "bootstrap-snakespotter: OK"
 echo "Next: GitHub secrets on andypapmedialight/SnakeSpotter, then Actions → Deploy."
