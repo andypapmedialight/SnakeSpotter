@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app import area
+from app import area, species
 from app.config import settings
 from app.db import create_sighting, get_sighting, init_db, list_sightings
 from app.models import AppConfig, ErrorMessage, SightingCreate, SightingList, SightingOut
@@ -40,6 +40,7 @@ def home(request: Request) -> HTMLResponse:
             "google_maps_api_key": settings.google_maps_api_key.strip(),
             "maps_enabled": settings.maps_enabled,
             "area": area,
+            "species_names": species.NAMES,
         },
     )
 

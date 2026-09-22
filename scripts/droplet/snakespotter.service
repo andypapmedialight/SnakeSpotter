@@ -38,6 +38,7 @@ RestrictSUIDSGID=true
 LockPersonality=true
 RestrictRealtime=true
 ReadWritePaths=/var/lib/snakespotter
+StateDirectory=snakespotter
 
 StandardOutput=journal
 StandardError=journal

@@ -94,25 +94,15 @@
                 type="text"
                 maxlength="120"
                 autocomplete="off"
-                placeholder="Eastern brown, or Unsure"
+                placeholder="Tiger snake, or Unsure"
                 list="species-suggestions"
               />
               <span class="field-hint">Leave blank or choose Unsure if you don’t know.</span>
             </label>
             <datalist id="species-suggestions">
-              <option value="Unsure"></option>
-              <option value="Eastern Brown Snake"></option>
-              <option value="Red-bellied Black Snake"></option>
-              <option value="Tiger Snake"></option>
-              <option value="Carpet Python"></option>
-              <option value="Coastal Taipan"></option>
-              <option value="Garter Snake"></option>
-              <option value="Western Diamondback Rattlesnake"></option>
-              <option value="Copperhead"></option>
-              <option value="Cottonmouth"></option>
-              <option value="Corn Snake"></option>
-              <option value="King Cobra"></option>
-              <option value="Ball Python"></option>
+              {% for name in species_names %}
+              <option value="{{ name }}"></option>
+              {% endfor %}
             </datalist>
             <label>
               Observed at

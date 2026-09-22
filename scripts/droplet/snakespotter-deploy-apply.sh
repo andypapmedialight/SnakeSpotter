@@ -51,7 +51,7 @@ if [[ "${EUID:-$(id -u)}" -eq 0 ]] && [[ -f "${SELF_INCOMING}" ]] && [[ -f "${AP
   fi
 fi
 
-for f in requirements.txt app/main.py app/config.py app/db.py app/models.py; do
+for f in requirements.txt app/main.py app/config.py app/db.py app/models.py app/area.py app/species.py; do
   if [[ ! -f "${INCOMING}/${f}" ]]; then
     echo "snakespotter-deploy-apply: missing ${INCOMING}/${f}" >&2
     exit 1
@@ -74,6 +74,41 @@ fi
 mkdir -p "${OPT}" "${DATA}" "${ENV_DIR}"
 chown snakespotter:snakespotter "${DATA}"
 chmod 750 "${DATA}"
+
+_sighting_count() {
+  local db="$1"
+  if [[ ! -f "${db}" ]]; then
+    echo 0
+    return
+  fi
+  python3 - "${db}" <<'PY'
+import sqlite3, sys
+path = sys.argv[1]
+try:
+    conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    print(conn.execute("SELECT COUNT(*) FROM sightings").fetchone()[0])
+except Exception:
+    print(0)
+PY
+}
+
+_preserve_hub_db() {
+  local opt_db="${OPT}/data/sightings.db"
+  local hub_db="${DATA}/sightings.db"
+  if [[ ! -f "${hub_db}" && -f "${opt_db}" ]]; then
+    echo "snakespotter-deploy-apply: moving ${opt_db} -> ${hub_db}"
+    cp -a "${opt_db}" "${hub_db}"
+    for suffix in -wal -shm -journal; do
+      if [[ -f "${opt_db}${suffix}" ]]; then
+        cp -a "${opt_db}${suffix}" "${hub_db}${suffix}"
+      fi
+    done
+    chown snakespotter:snakespotter "${hub_db}" "${hub_db}"-wal "${hub_db}"-shm "${hub_db}"-journal 2>/dev/null || true
+  fi
+}
+
+_preserve_hub_db
+SIGHTINGS_BEFORE="$(_sighting_count "${DATA}/sightings.db")"
 
 _write_runtime_env() {
   local incoming_env="${INCOMING}/private/snakespotter.env"
@@ -128,9 +163,12 @@ rsync -a --delete \
   --exclude '.env' \
   --exclude '__pycache__' \
   --exclude '.pytest_cache' \
-  --exclude 'data/*.db' \
-  --exclude 'data/*.db-journal' \
+  --exclude 'data' \
+  --exclude 'data/' \
+  --exclude 'data/**' \
   --exclude 'private' \
+  --filter 'P data/' \
+  --filter 'P data/**' \
   "${INCOMING}/" "${OPT}/"
 
 _ensure_python_venv
@@ -169,4 +207,10 @@ if [[ "${health_ok}" -ne 1 ]]; then
   exit 1
 fi
 
-echo "snakespotter-deploy-apply: OK"
+SIGHTINGS_AFTER="$(_sighting_count "${DATA}/sightings.db")"
+if [[ "${SIGHTINGS_AFTER}" -lt "${SIGHTINGS_BEFORE}" ]]; then
+  echo "snakespotter-deploy-apply: sightings dropped ${SIGHTINGS_BEFORE} -> ${SIGHTINGS_AFTER}" >&2
+  exit 1
+fi
+
+echo "snakespotter-deploy-apply: OK (${SIGHTINGS_AFTER} sightings)"

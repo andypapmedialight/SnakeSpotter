@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import shutil
 import sqlite3
 import threading
 import uuid
@@ -11,17 +13,40 @@ from app.models import SightingCreate, SightingOut
 
 _lock = threading.Lock()
 
+HUB_DB_DIR = Path("/var/lib/snakespotter")
+HUB_DB = HUB_DB_DIR / "sightings.db"
 
-def _db_path() -> Path:
+
+def _configured_path() -> Path:
     path = Path(settings.database_path)
     if not path.is_absolute():
         path = Path(__file__).resolve().parent.parent / path
     return path
 
 
+def _db_path() -> Path:
+    # Hub deploys rsync --delete into /opt/snakespotter. Keep sightings in the
+    # data directory that systemd already marks writable.
+    if HUB_DB_DIR.is_dir() and os.access(HUB_DB_DIR, os.W_OK):
+        return HUB_DB
+    return _configured_path()
+
+
+def _copy_sqlite(src: Path, dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dest)
+    for suffix in ("-wal", "-shm", "-journal"):
+        extra = Path(f"{src}{suffix}")
+        if extra.exists():
+            shutil.copy2(extra, Path(f"{dest}{suffix}"))
+
+
 def init_db() -> None:
     path = _db_path()
     path.parent.mkdir(parents=True, exist_ok=True)
+    legacy = _configured_path()
+    if path != legacy and legacy.exists() and not path.exists():
+        _copy_sqlite(legacy, path)
     with _connect() as conn:
         conn.execute(
             """

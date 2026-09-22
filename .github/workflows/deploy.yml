@@ -68,7 +68,9 @@ jobs:
             --exclude '.pytest_cache' \
             --exclude '.idea' \
             --exclude '.env' \
-            --exclude 'data/*.db' \
+            --exclude 'data' \
+            --exclude 'data/' \
+            --exclude 'data/**' \
             ./ "${DEST}"
           rsync -avz -e "${RSYNC_SSH}" \
             ./scripts/droplet/snakespotter.service \

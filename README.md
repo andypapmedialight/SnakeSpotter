@@ -2,7 +2,7 @@
 
 A field log for snake sightings along Edgars Creek in Coburg North. Record species, notes, and time, then pin the location on the map.
 
-Sightings are stored in a SQLite file on disk. There is no account system and no hosted database.
+Sightings are stored in a SQLite file on disk. There is no account system and no hosted database. Hub deploys rsync the app into `/opt/snakespotter` but keep the database at `/var/lib/snakespotter/sightings.db`, so logged sightings survive each push to `main`.
 
 Source of truth: [github.com/andypapmedialight/SnakeSpotter](https://github.com/andypapmedialight/SnakeSpotter) (`main`). Anthemic Hub deploys from that branch, not from a laptop working copy.
 
@@ -60,5 +60,7 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 - Click the map around Edgars Creek, Coburg North to drop a pin
 
 The map stays on that creek corridor, down to De Chene Reserve. Pins outside the area are rejected.
+
+The species list is snakes recorded around Edgars Creek and inner-north Melbourne: Eastern Brown, Tiger, Lowland Copperhead, Red-bellied Black, White-lipped, Little Whip, and Small-eyed. Unsure is always available.
 
 Local data lives in `data/sightings.db`. Hub data lives in `/var/lib/snakespotter/sightings.db`.
