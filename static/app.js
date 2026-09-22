@@ -23,10 +23,10 @@
     "December",
   ];
   const mapArea = config.map || {
-    center: { lat: -37.735, lng: 144.977 },
-    zoom: 15,
-    minZoom: 14,
-    bounds: { north: -37.7254, south: -37.7445, east: 144.993, west: 144.963 },
+    center: { lat: -37.735, lng: 144.9755 },
+    zoom: 16,
+    minZoom: 15,
+    bounds: { north: -37.7254, south: -37.7445, east: 144.9795, west: 144.9714 },
   };
 
   const els = {

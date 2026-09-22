@@ -63,7 +63,7 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 - Open Summary for counts by time of day, month, and creek stretch
 - Open Gallery to compare identification photos when you need them
 
-The map stays on that creek corridor, from Photography Drive down to Bell Street. Pins outside the area are rejected.
+The map stays on that creek corridor, from Photography Drive to Bell Street and Newlands Road to Whitton Parade. Pins outside the area are rejected.
 
 The species list is snakes recorded around Edgars Creek and inner-north Melbourne: Eastern Brown, Tiger, Lowland Copperhead, Red-bellied Black, White-lipped, Little Whip, and Small-eyed. Unsure is always available. Identification photos are Wikimedia Commons files; credits sit under each picture. Each species shows how venomous it is.
 

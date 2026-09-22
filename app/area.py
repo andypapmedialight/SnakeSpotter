@@ -1,16 +1,18 @@
-# Edgars Creek, Coburg North: Photography Drive south to Bell Street.
-# Photography Drive north kerb at Newlands Rd: about -37.7257, 144.9743.
-# Bell Street in this corridor: about -37.7410 west to -37.7443 east;
-# creek crossing near -37.7424, 144.977.
+# Edgars Creek, Coburg North: Photography Drive to Bell Street,
+# Newlands Road to Whitton Parade.
+# Photography Drive at Newlands Rd: about -37.7257, 144.9743.
+# Newlands Road in this band: about 144.9716 (west) to 144.9743 (north).
+# Whitton Parade: about 144.9783 to 144.9793.
+# Bell Street creek crossing: about -37.7424, 144.977.
 NAME = "Edgars Creek, Coburg North"
 CENTER_LAT = -37.7350
-CENTER_LNG = 144.9770
-DEFAULT_ZOOM = 15
-MIN_ZOOM = 14
+CENTER_LNG = 144.9755
+DEFAULT_ZOOM = 16
+MIN_ZOOM = 15
 NORTH = -37.7254
 SOUTH = -37.7445
-WEST = 144.9630
-EAST = 144.9930
+WEST = 144.9714
+EAST = 144.9795
 
 # North-to-south creek stretches. A pin belongs to the first reach whose
 # south edge is still south of it.
