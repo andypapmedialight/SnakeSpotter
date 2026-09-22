@@ -527,15 +527,14 @@
     show(els.listLoading, state.loadingList);
     show(els.listError, Boolean(state.listError) && !state.loadingList);
     els.listError.textContent = state.listError;
-    const empty = !state.loadingList && !state.listError && state.sightings.length === 0;
+    const sightings = mappedSightings();
+    const empty = !state.loadingList && !state.listError && sightings.length === 0;
     show(els.listEmpty, empty);
     show(els.list, !state.loadingList && !state.listError && !empty);
-    els.listCount.textContent = state.loadingList
-      ? ""
-      : `${state.sightings.length} logged`;
+    els.listCount.textContent = state.loadingList ? "" : `${sightings.length} logged`;
 
     els.list.replaceChildren();
-    for (const sighting of state.sightings) {
+    for (const sighting of sightings) {
       const item = document.createElement("li");
       const button = document.createElement("button");
       button.type = "button";
@@ -615,11 +614,12 @@
     show(els.summaryLoading, state.loadingList);
     show(els.summaryError, Boolean(state.listError) && !state.loadingList);
     els.summaryError.textContent = state.listError;
-    const empty = !state.loadingList && !state.listError && state.sightings.length === 0;
+    const sightings = mappedSightings();
+    const empty = !state.loadingList && !state.listError && sightings.length === 0;
     show(els.summaryEmpty, empty);
     show(els.summaryBody, !state.loadingList && !state.listError && !empty);
 
-    const total = state.sightings.length;
+    const total = sightings.length;
     els.summaryTotal.textContent = state.loadingList
       ? ""
       : total === 1
@@ -631,7 +631,7 @@
     const monthCounts = Array(12).fill(0);
     const locCounts = new Map(creekReaches.map((reach) => [reach.id, 0]));
 
-    for (const sighting of state.sightings) {
+    for (const sighting of sightings) {
       const clock = observedClock(sighting.observed_at);
       if (clock) {
         todCounts[dayPeriodFor(clock.hour).id] += 1;
@@ -863,7 +863,7 @@
     for (const marker of state.markers) marker.setMap(null);
     state.markers = [];
     state.markersById.clear();
-    for (const sighting of state.sightings) {
+    for (const sighting of mappedSightings()) {
       const marker = placeSnakeMarker(
         { lat: sighting.latitude, lng: sighting.longitude },
         `${sighting.species}, ${formatRelative(sighting.observed_at)}`
@@ -894,6 +894,12 @@
   function inSurveyArea(lat, lng) {
     const bounds = mapArea.bounds;
     return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east;
+  }
+
+  function mappedSightings() {
+    return state.sightings.filter((sighting) =>
+      inSurveyArea(sighting.latitude, sighting.longitude)
+    );
   }
 
   function setPickPosition(lat, lng) {
