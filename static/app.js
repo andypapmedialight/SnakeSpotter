@@ -61,6 +61,19 @@
     formGalleryBtn: document.getElementById("form-gallery-btn"),
     galleryBack: document.getElementById("gallery-back"),
     galleryPickHint: document.getElementById("gallery-pick-hint"),
+    adminBtn: document.getElementById("admin-btn"),
+    adminStatus: document.getElementById("admin-status"),
+    adminView: document.getElementById("admin-view"),
+    adminForm: document.getElementById("admin-form"),
+    adminPassword: document.getElementById("admin-password"),
+    adminError: document.getElementById("admin-error"),
+    adminCancel: document.getElementById("admin-cancel"),
+    adminLoginBtn: document.getElementById("admin-login-btn"),
+    confirmView: document.getElementById("confirm-view"),
+    confirmCopy: document.getElementById("confirm-copy"),
+    confirmCancel: document.getElementById("confirm-cancel"),
+    confirmOk: document.getElementById("confirm-ok"),
+    detailRemove: document.getElementById("detail-remove"),
     summaryBtn: document.getElementById("summary-btn"),
     summaryBack: document.getElementById("summary-back"),
     summaryEmptyNew: document.getElementById("summary-empty-new"),
@@ -106,6 +119,9 @@
     hoveredSightingId: null,
     stickySightingId: null,
     galleryPicking: false,
+    adminEnabled: Boolean(config.adminEnabled),
+    adminSignedIn: false,
+    pendingDeleteId: null,
   };
 
   function show(el, on = true) {
@@ -133,8 +149,123 @@
     return Boolean(els.formView && els.formView.open);
   }
 
-  function isGalleryOpen() {
-    return Boolean(els.galleryView && els.galleryView.open);
+  function isAdminOpen() {
+    return Boolean(els.adminView && els.adminView.open);
+  }
+
+  function isConfirmOpen() {
+    return Boolean(els.confirmView && els.confirmView.open);
+  }
+
+  function applyAdminUi() {
+    document.body.classList.toggle("admin-on", state.adminSignedIn);
+    if (els.adminBtn) {
+      show(els.adminBtn, state.adminEnabled);
+      els.adminBtn.textContent = state.adminSignedIn ? "Sign out" : "Admin";
+    }
+    if (els.adminStatus) show(els.adminStatus, state.adminSignedIn);
+    if (els.detailRemove) show(els.detailRemove, state.adminSignedIn && state.mode === "detail");
+  }
+
+  function resetAdminForm() {
+    if (els.adminForm) els.adminForm.reset();
+    if (els.adminError) {
+      els.adminError.hidden = true;
+      els.adminError.textContent = "";
+    }
+    if (els.adminLoginBtn) {
+      els.adminLoginBtn.disabled = false;
+      els.adminLoginBtn.textContent = "Sign in";
+    }
+  }
+
+  function closeAdmin() {
+    if (isAdminOpen()) els.adminView.close();
+    resetAdminForm();
+  }
+
+  function openAdmin() {
+    closeGallery();
+    if (els.adminError) {
+      els.adminError.hidden = true;
+      els.adminError.textContent = "";
+    }
+    if (els.adminForm) els.adminForm.reset();
+    if (!isAdminOpen()) els.adminView.showModal();
+    window.setTimeout(() => els.adminPassword && els.adminPassword.focus(), 30);
+  }
+
+  function closeConfirm() {
+    state.pendingDeleteId = null;
+    if (isConfirmOpen()) els.confirmView.close();
+  }
+
+  function askRemoveSighting(sighting) {
+    if (!sighting) return;
+    state.pendingDeleteId = sighting.id;
+    els.confirmCopy.textContent = `${sighting.species} · ${formatWhen(sighting.observed_at)}. This cannot be undone.`;
+    if (!isConfirmOpen()) els.confirmView.showModal();
+  }
+
+  async function refreshAdminSession() {
+    if (!state.adminEnabled) {
+      state.adminSignedIn = false;
+      applyAdminUi();
+      return;
+    }
+    try {
+      const data = await fetchJson("api/admin/session");
+      state.adminSignedIn = Boolean(data && data.signed_in);
+    } catch {
+      state.adminSignedIn = false;
+    }
+    applyAdminUi();
+    renderList();
+  }
+
+  async function signOutAdmin() {
+    try {
+      await fetchJson("api/admin/logout", { method: "POST" });
+    } catch {
+      // Cookie is httponly; still drop the local flag if the request fails.
+    }
+    state.adminSignedIn = false;
+    applyAdminUi();
+    renderList();
+  }
+
+  async function removePendingSighting() {
+    const id = state.pendingDeleteId;
+    if (!id) return;
+    els.confirmOk.disabled = true;
+    els.confirmOk.textContent = "Removing…";
+    try {
+      await fetchJson(`api/sightings/${id}`, { method: "DELETE" });
+      closeConfirm();
+      if (state.selectedId === id) {
+        state.selectedId = null;
+        setMode("list");
+      }
+      if (state.stickySightingId === id || state.hoveredSightingId === id) {
+        closeInfoWindow({ force: true });
+      }
+      setAppBanner("");
+      await loadSightings();
+    } catch (error) {
+      closeConfirm();
+      if (/sign-in/i.test(error.message || "")) {
+        state.adminSignedIn = false;
+        applyAdminUi();
+        openAdmin();
+        els.adminError.textContent = "Sign in again to remove sightings.";
+        els.adminError.hidden = false;
+      } else {
+        setAppBanner(error.message || "Could not remove that sighting.");
+      }
+    } finally {
+      els.confirmOk.disabled = false;
+      els.confirmOk.textContent = "Remove";
+    }
   }
 
   function refreshMap() {
@@ -283,8 +414,9 @@
     return fallback;
   }
 
-  async function fetchJson(url, options) {
-    const response = await fetch(url, options);
+  async function fetchJson(url, options = {}) {
+    const response = await fetch(url, { credentials: "same-origin", ...options });
+    if (response.status === 204) return null;
     let payload = null;
     try {
       payload = await response.json();
@@ -330,6 +462,20 @@
       button.addEventListener("focus", () => openInfoWindow(sighting));
       button.addEventListener("blur", () => scheduleHoverClose());
       item.appendChild(button);
+      if (state.adminSignedIn) {
+        const actions = document.createElement("div");
+        actions.className = "sighting-row-actions";
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "btn btn-danger sighting-remove";
+        remove.textContent = "Remove";
+        remove.addEventListener("click", (event) => {
+          event.stopPropagation();
+          askRemoveSighting(sighting);
+        });
+        actions.appendChild(remove);
+        item.appendChild(actions);
+      }
       els.list.appendChild(item);
     }
   }
@@ -738,6 +884,7 @@
     show(els.detailLoading, true);
     show(els.detailError, false);
     show(els.detailBody, false);
+    show(els.detailRemove, false);
     renderList();
     try {
       const sighting = await fetchJson(`api/sightings/${id}`);
@@ -773,12 +920,14 @@
       }
       show(els.detailLoading, false);
       show(els.detailBody, true);
+      show(els.detailRemove, state.adminSignedIn);
       openInfoWindow(sighting, { sticky: true, refresh: true });
       focusSighting(sighting);
     } catch (error) {
       show(els.detailLoading, false);
       els.detailError.textContent = error.message || "Could not load this sighting.";
       show(els.detailError, true);
+      show(els.detailRemove, false);
     }
   }
 
@@ -786,6 +935,7 @@
     state.selectedId = null;
     closeInfoWindow({ force: true });
     setMode("list");
+    show(els.detailRemove, false);
     renderList();
   }
 
@@ -799,6 +949,58 @@
   els.galleryBtn.addEventListener("click", openGallery);
   els.formGalleryBtn.addEventListener("click", openGallery);
   els.galleryBack.addEventListener("click", closeGallery);
+  els.adminBtn.addEventListener("click", () => {
+    if (state.adminSignedIn) {
+      signOutAdmin();
+      return;
+    }
+    openAdmin();
+  });
+  els.adminCancel.addEventListener("click", closeAdmin);
+  els.adminView.addEventListener("close", resetAdminForm);
+  els.adminView.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeAdmin();
+  });
+  els.confirmCancel.addEventListener("click", closeConfirm);
+  els.confirmOk.addEventListener("click", removePendingSighting);
+  els.confirmView.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeConfirm();
+  });
+  els.detailRemove.addEventListener("click", () => {
+    const sighting = state.sightings.find((item) => item.id === state.selectedId);
+    if (sighting) askRemoveSighting(sighting);
+  });
+  els.adminForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    els.adminError.hidden = true;
+    const password = els.adminPassword.value;
+    if (!password) {
+      els.adminError.textContent = "Enter the admin password.";
+      els.adminError.hidden = false;
+      return;
+    }
+    els.adminLoginBtn.disabled = true;
+    els.adminLoginBtn.textContent = "Signing in…";
+    try {
+      await fetchJson("api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      state.adminSignedIn = true;
+      applyAdminUi();
+      renderList();
+      if (state.mode === "detail") show(els.detailRemove, true);
+      closeAdmin();
+    } catch (error) {
+      els.adminError.textContent = error.message || "Could not sign in.";
+      els.adminError.hidden = false;
+      els.adminLoginBtn.disabled = false;
+      els.adminLoginBtn.textContent = "Sign in";
+    }
+  });
   els.formView.addEventListener("close", () => {
     document.body.classList.remove("form-open");
     show(els.mapHint, false);
@@ -812,6 +1014,16 @@
   });
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
+    if (isConfirmOpen()) {
+      event.preventDefault();
+      closeConfirm();
+      return;
+    }
+    if (isAdminOpen()) {
+      event.preventDefault();
+      closeAdmin();
+      return;
+    }
     if (isGalleryOpen()) {
       event.preventDefault();
       closeGallery();
@@ -914,5 +1126,7 @@
   }
 
   setMode("list");
+  applyAdminUi();
+  refreshAdminSession();
   loadSightings();
 })();

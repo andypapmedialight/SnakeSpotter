@@ -53,6 +53,15 @@ class SightingList(BaseModel):
 
 class AppConfig(BaseModel):
     maps_enabled: bool
+    admin_enabled: bool = False
+
+
+class AdminLogin(BaseModel):
+    password: str = Field(min_length=1, max_length=200)
+
+
+class AdminSession(BaseModel):
+    signed_in: bool
 
 
 class ErrorMessage(BaseModel):

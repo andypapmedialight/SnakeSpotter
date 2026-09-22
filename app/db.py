@@ -146,3 +146,10 @@ def create_sighting(payload: SightingCreate) -> SightingOut:
         )
         conn.commit()
     return sighting
+
+
+def delete_sighting(sighting_id: str) -> bool:
+    with _lock, _connect() as conn:
+        cursor = conn.execute("DELETE FROM sightings WHERE id = ?", (sighting_id,))
+        conn.commit()
+        return cursor.rowcount > 0

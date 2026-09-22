@@ -18,20 +18,25 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Stage maps key (private incoming only, never in git)
+      - name: Stage runtime env (private incoming only, never in git)
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: |
           set -euo pipefail
           mkdir -p incoming-snakespotter/private
           key="${GOOGLE_MAPS_API_KEY:-}"
           key="${key//$'\r'/}"
           key="${key//$'\n'/}"
+          admin="${ADMIN_PASSWORD:-}"
+          admin="${admin//$'\r'/}"
+          admin="${admin//$'\n'/}"
           {
             echo "HOST=127.0.0.1"
             echo "PORT=8075"
             echo "DATABASE_PATH=/var/lib/snakespotter/sightings.db"
             printf 'GOOGLE_MAPS_API_KEY=%s\n' "${key}"
+            printf 'ADMIN_PASSWORD=%s\n' "${admin}"
           } > incoming-snakespotter/private/snakespotter.env
           chmod 600 incoming-snakespotter/private/snakespotter.env
 

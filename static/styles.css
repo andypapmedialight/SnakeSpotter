@@ -471,6 +471,15 @@ code {
   padding-left: 0;
 }
 
+.btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: #f0d4ce;
+}
+
 .btn-block {
   width: 100%;
   margin-top: 0.25rem;
@@ -562,6 +571,31 @@ code {
   color: var(--muted);
   font-size: 0.88rem;
   margin-top: 0.22rem;
+}
+
+.sighting-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.2rem;
+}
+
+.sighting-remove {
+  min-height: 2.1rem;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.admin-status {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+#detail-remove {
+  margin-top: 1.1rem;
 }
 
 .gm-style .gm-style-iw-c {
@@ -869,6 +903,17 @@ button.stat-row:focus-visible {
 }
 
 .sheet-gallery::backdrop {
+  background: rgba(23, 26, 22, 0.42);
+}
+
+.sheet-admin,
+.sheet-confirm {
+  width: min(24rem, calc(100vw - 1.5rem));
+  max-height: min(88dvh, 28rem);
+}
+
+.sheet-admin::backdrop,
+.sheet-confirm::backdrop {
   background: rgba(23, 26, 22, 0.42);
 }
 

@@ -35,6 +35,8 @@
         Record snakes along Edgars Creek in Coburg North — what you saw, when, and where.
       </p>
       <div class="header-actions">
+        <p id="admin-status" class="admin-status" hidden>Moderating</p>
+        <button type="button" class="btn btn-quiet" id="admin-btn" hidden>Admin</button>
         <button type="button" class="btn btn-quiet" id="gallery-btn">Gallery</button>
         <button type="button" class="btn btn-quiet" id="summary-btn">Summary</button>
         <button type="button" class="btn btn-primary" id="new-btn">Log a sighting</button>
@@ -147,6 +149,9 @@
               </div>
             </dl>
             <p id="detail-notes" class="notes"></p>
+            <button type="button" class="btn btn-danger" id="detail-remove" hidden>
+              Remove sighting
+            </button>
           </article>
         </section>
       </aside>
@@ -282,9 +287,48 @@
       </div>
     </dialog>
 
+    <dialog id="admin-view" class="sheet sheet-gallery sheet-admin" aria-labelledby="admin-heading">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Moderation</p>
+          <h2 id="admin-heading">Sign in to moderate</h2>
+        </div>
+        <button type="button" class="btn btn-quiet" id="admin-cancel">Close</button>
+      </div>
+      <p class="muted form-intro">
+        Use the hub admin password to remove mistaken or abusive sightings. This is not a public account.
+      </p>
+      <form id="admin-form">
+        <label>
+          Password
+          <input
+            id="admin-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+        <p id="admin-error" class="field-error" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block" id="admin-login-btn">
+          Sign in
+        </button>
+      </form>
+    </dialog>
+
+    <dialog id="confirm-view" class="sheet sheet-gallery sheet-confirm" aria-labelledby="confirm-heading">
+      <div class="panel-head">
+        <h2 id="confirm-heading">Remove this sighting?</h2>
+        <button type="button" class="btn btn-quiet" id="confirm-cancel">Cancel</button>
+      </div>
+      <p id="confirm-copy" class="muted form-intro"></p>
+      <button type="button" class="btn btn-danger btn-block" id="confirm-ok">Remove</button>
+    </dialog>
+
     <script>
       window.SNAKESPOTTER = {
         mapsEnabled: {% if maps_enabled %}true{% else %}false{% endif %},
+        adminEnabled: {% if admin_enabled %}true{% else %}false{% endif %},
         species: {{ species_json | safe }},
         reaches: {{ reaches_json | safe }},
         map: {

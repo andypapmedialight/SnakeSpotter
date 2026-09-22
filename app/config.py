@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     )
 
     google_maps_api_key: str = ""
+    admin_password: str = ""
     host: str = "0.0.0.0"
     port: int = 4867
     database_path: str = "data/sightings.db"
@@ -16,6 +17,10 @@ class Settings(BaseSettings):
     @property
     def maps_enabled(self) -> bool:
         return bool(self.google_maps_api_key.strip())
+
+    @property
+    def admin_enabled(self) -> bool:
+        return bool(self.admin_password.strip())
 
 
 settings = Settings()

@@ -51,7 +51,7 @@ if [[ "${EUID:-$(id -u)}" -eq 0 ]] && [[ -f "${SELF_INCOMING}" ]] && [[ -f "${AP
   fi
 fi
 
-for f in requirements.txt app/main.py app/config.py app/db.py app/models.py app/area.py app/species.py; do
+for f in requirements.txt app/main.py app/config.py app/db.py app/models.py app/area.py app/species.py app/admin.py; do
   if [[ ! -f "${INCOMING}/${f}" ]]; then
     echo "snakespotter-deploy-apply: missing ${INCOMING}/${f}" >&2
     exit 1
@@ -110,27 +110,41 @@ _preserve_hub_db() {
 _preserve_hub_db
 SIGHTINGS_BEFORE="$(_sighting_count "${DATA}/sightings.db")"
 
+_extract_env_value() {
+  local file="$1"
+  local key="$2"
+  if [[ ! -f "${file}" ]]; then
+    printf '%s' ""
+    return
+  fi
+  awk -F= -v k="${key}" '
+    $1==k { print substr($0, index($0,$2)); exit }
+  ' "${file}" | tr -d '\r'
+}
+
 _write_runtime_env() {
   local incoming_env="${INCOMING}/private/snakespotter.env"
-  local incoming_key=""
-  local existing_key=""
-  if [[ -f "${incoming_env}" ]]; then
-    incoming_key="$(awk -F= '/^GOOGLE_MAPS_API_KEY=/{print substr($0, index($0,$2)); exit}' "${incoming_env}" | tr -d '\r')"
-  fi
-  if [[ -f "${ENV_FILE}" ]]; then
-    existing_key="$(awk -F= '/^GOOGLE_MAPS_API_KEY=/{print substr($0, index($0,$2)); exit}' "${ENV_FILE}" | tr -d '\r')"
-  fi
+  local incoming_key existing_key incoming_admin existing_admin
+  incoming_key="$(_extract_env_value "${incoming_env}" GOOGLE_MAPS_API_KEY)"
+  existing_key="$(_extract_env_value "${ENV_FILE}" GOOGLE_MAPS_API_KEY)"
+  incoming_admin="$(_extract_env_value "${incoming_env}" ADMIN_PASSWORD)"
+  existing_admin="$(_extract_env_value "${ENV_FILE}" ADMIN_PASSWORD)"
   local maps_key="${incoming_key}"
   if [[ -z "${maps_key}" && -n "${existing_key}" ]]; then
     maps_key="${existing_key}"
   fi
+  local admin_password="${incoming_admin}"
+  if [[ -z "${admin_password}" && -n "${existing_admin}" ]]; then
+    admin_password="${existing_admin}"
+  fi
   umask 077
-  cat > "${ENV_FILE}" <<EOF
-HOST=127.0.0.1
-PORT=8075
-DATABASE_PATH=/var/lib/snakespotter/sightings.db
-GOOGLE_MAPS_API_KEY=${maps_key}
-EOF
+  {
+    echo "HOST=127.0.0.1"
+    echo "PORT=8075"
+    echo "DATABASE_PATH=/var/lib/snakespotter/sightings.db"
+    printf 'GOOGLE_MAPS_API_KEY=%s\n' "${maps_key}"
+    printf 'ADMIN_PASSWORD=%s\n' "${admin_password}"
+  } > "${ENV_FILE}"
   chmod 640 "${ENV_FILE}"
   chown root:snakespotter "${ENV_FILE}"
 }

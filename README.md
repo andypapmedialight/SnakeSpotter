@@ -34,6 +34,28 @@ gh secret set GOOGLE_MAPS_API_KEY --repo andypapmedialight/SnakeSpotter
 
 Then push `main` (or run **Actions → Deploy**) so CI installs the env file. If the secret is empty, the hub app still serves; maps stay in the fallback.
 
+## Admin (moderate / delete)
+
+There is no public account system. Set `ADMIN_PASSWORD` to turn on a sign-in that can remove sightings. Empty means admin stays off.
+
+Locally, add it to `.env`. On the hub it is a GitHub Actions secret, staged into the same env file as the maps key (never committed).
+
+```bash
+gh secret set ADMIN_PASSWORD --repo andypapmedialight/SnakeSpotter
+```
+
+Push `main` after setting or rotating it. If the secret is empty, deploy keeps the password already on the droplet.
+
+On the site: **Admin** → password → **Remove** on a list row or a sighting’s detail. The session is an HTTP-only cookie for 12 hours. **Sign out** clears it.
+
+The apply script on the droplet does not self-update. After this change it must be installed once as root:
+
+```bash
+install -m 755 -o root -g root \
+  /home/deploy/incoming-snakespotter/snakespotter-deploy-apply.sh \
+  /usr/local/bin/snakespotter-deploy-apply.sh
+```
+
 ## Anthemic Hub
 
 Public URL: [https://snakespot.anthemic-developments.com/](https://snakespot.anthemic-developments.com/)
@@ -62,6 +84,7 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 - Log a sighting or open the gallery in a popup (the map stays usable while you log)
 - Open Summary for counts by time of day, month, and creek stretch
 - Open Gallery to compare identification photos when you need them
+- Sign in as admin (if a password is configured) to remove a sighting
 
 The map stays on that creek corridor, from Photography Drive to Bell Street and Newlands Road to Whitton Parade. Pins outside the area are rejected.
 
