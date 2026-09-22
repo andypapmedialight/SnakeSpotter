@@ -139,10 +139,15 @@ code {
   line-height: 1.45;
 }
 
-.site-header .btn-primary {
+.header-actions {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .layout {
@@ -364,6 +369,15 @@ code {
 
 .btn-primary:hover {
   background: var(--accent-deep);
+}
+
+.btn-quiet {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.btn-quiet:hover {
+  background: #d4e8dd;
 }
 
 .btn-ghost {
@@ -626,19 +640,111 @@ dd {
   line-height: 1.55;
 }
 
+.summary-total {
+  margin: 0.35rem 0 1.1rem;
+}
+
+.stat-block {
+  margin: 0 0 1.35rem;
+}
+
+.stat-block h3 {
+  font-size: 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.stat-block .field-hint {
+  margin: -0.2rem 0 0.65rem;
+}
+
+.stat-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 38%) minmax(0, 1fr) 2.1rem;
+  gap: 0.45rem;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+button.stat-row {
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+button.stat-row:hover .stat-fill,
+button.stat-row:focus-visible .stat-fill {
+  background: var(--accent-deep);
+}
+
+button.stat-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.stat-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.stat-hint {
+  display: block;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.stat-track {
+  height: 0.7rem;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.stat-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: inherit;
+}
+
+.stat-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-align: right;
+  color: var(--ink);
+}
+
 @media (max-width: 840px) {
   .site-header {
     grid-template-columns: 1fr;
   }
 
   .lede,
-  .site-header .btn-primary {
+  .header-actions {
     grid-column: 1;
     grid-row: auto;
   }
 
-  .site-header .btn-primary {
-    justify-self: start;
+  .header-actions {
+    justify-content: flex-start;
     margin-top: 0.35rem;
   }
 

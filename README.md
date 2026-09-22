@@ -59,6 +59,7 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 - Roll over a pin (or a list row) to see the full sighting on the map
 - Open a sighting and jump to its pin
 - Click the map around Edgars Creek, Coburg North to drop a pin
+- Open Summary for counts by time of day, month, and creek stretch
 
 The map stays on that creek corridor, from Photography Drive down to Bell Street. Pins outside the area are rejected.
 

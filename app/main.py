@@ -44,6 +44,7 @@ def home(request: Request) -> HTMLResponse:
             "species_names": species.NAMES,
             "species": species.SPECIES,
             "species_json": dumps(species.SPECIES),
+            "reaches_json": dumps(area.REACHES),
         },
     )
 

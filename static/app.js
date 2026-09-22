@@ -1,6 +1,27 @@
 (() => {
   const config = window.SNAKESPOTTER || { mapsEnabled: false };
   const speciesCatalog = Array.isArray(config.species) ? config.species : [];
+  const creekReaches = Array.isArray(config.reaches) ? config.reaches : [];
+  const DAY_PERIODS = [
+    { id: "night", name: "Night", hint: "12am–6am", start: 0, end: 6 },
+    { id: "morning", name: "Morning", hint: "6am–12pm", start: 6, end: 12 },
+    { id: "afternoon", name: "Afternoon", hint: "12pm–6pm", start: 12, end: 18 },
+    { id: "evening", name: "Evening", hint: "6pm–12am", start: 18, end: 24 },
+  ];
+  const MONTHS = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
   const mapArea = config.map || {
     center: { lat: -37.735, lng: 144.977 },
     zoom: 15,
@@ -17,6 +38,7 @@
     listView: document.getElementById("list-view"),
     formView: document.getElementById("form-view"),
     detailView: document.getElementById("detail-view"),
+    summaryView: document.getElementById("summary-view"),
     listLoading: document.getElementById("list-loading"),
     listError: document.getElementById("list-error"),
     listEmpty: document.getElementById("list-empty"),
@@ -34,6 +56,17 @@
     newBtn: document.getElementById("new-btn"),
     emptyNewBtn: document.getElementById("empty-new-btn"),
     formCancel: document.getElementById("form-cancel"),
+    summaryBtn: document.getElementById("summary-btn"),
+    summaryBack: document.getElementById("summary-back"),
+    summaryEmptyNew: document.getElementById("summary-empty-new"),
+    summaryTotal: document.getElementById("summary-total"),
+    summaryLoading: document.getElementById("summary-loading"),
+    summaryError: document.getElementById("summary-error"),
+    summaryEmpty: document.getElementById("summary-empty"),
+    summaryBody: document.getElementById("summary-body"),
+    statTod: document.getElementById("stat-tod"),
+    statToy: document.getElementById("stat-toy"),
+    statLoc: document.getElementById("stat-loc"),
     detailBack: document.getElementById("detail-back"),
     detailLoading: document.getElementById("detail-loading"),
     detailError: document.getElementById("detail-error"),
@@ -86,6 +119,7 @@
     show(els.listView, mode === "list");
     show(els.formView, mode === "form");
     show(els.detailView, mode === "detail");
+    show(els.summaryView, mode === "summary");
     show(els.mapHint, mode === "form" && state.mapsReady && !state.mapsFailed);
     if (mode !== "form" && state.pickMarker) {
       state.pickMarker.setMap(null);
@@ -112,6 +146,35 @@
 
   function formatCoords(lat, lng) {
     return `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+  }
+
+  function observedClock(iso) {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return null;
+    // datetime-local is stored as UTC wall-clock, so read UTC hour/month.
+    return { hour: date.getUTCHours(), month: date.getUTCMonth() };
+  }
+
+  function dayPeriodFor(hour) {
+    return DAY_PERIODS.find((period) => hour >= period.start && hour < period.end) || DAY_PERIODS[0];
+  }
+
+  function reachFor(latitude) {
+    if (latitude > mapArea.bounds.north) {
+      return { id: "north-of-area", name: "North of Photography Drive", south: mapArea.bounds.north };
+    }
+    for (const reach of creekReaches) {
+      if (latitude >= reach.south) return reach;
+    }
+    return { id: "south-of-area", name: "South of Bell Street", south: mapArea.bounds.south };
+  }
+
+  function reachBand(reach) {
+    const index = creekReaches.findIndex((item) => item.id === reach.id);
+    const north =
+      index <= 0 ? mapArea.bounds.north : creekReaches[index - 1].south;
+    const south = Number(reach.south);
+    return { north, south, lat: (north + south) / 2, lng: mapArea.center.lng };
   }
 
   function resetForm() {
@@ -197,6 +260,116 @@
       item.appendChild(button);
       els.list.appendChild(item);
     }
+  }
+
+  function renderBarList(container, rows) {
+    container.replaceChildren();
+    const max = Math.max(0, ...rows.map((row) => row.count));
+    for (const row of rows) {
+      const item = document.createElement("li");
+      const inner = row.onSelect ? document.createElement("button") : document.createElement("div");
+      inner.className = "stat-row";
+      if (row.onSelect) inner.type = "button";
+
+      const label = document.createElement("span");
+      label.className = "stat-label";
+      label.append(row.name);
+      if (row.hint) {
+        const hint = document.createElement("span");
+        hint.className = "stat-hint";
+        hint.textContent = row.hint;
+        label.appendChild(hint);
+      }
+
+      const track = document.createElement("span");
+      track.className = "stat-track";
+      const fill = document.createElement("span");
+      fill.className = "stat-fill";
+      fill.style.width = max ? `${Math.round((row.count / max) * 100)}%` : "0%";
+      track.appendChild(fill);
+
+      const count = document.createElement("span");
+      count.className = "stat-count";
+      count.textContent = String(row.count);
+
+      inner.append(label, track, count);
+      if (row.onSelect) inner.addEventListener("click", row.onSelect);
+      item.appendChild(inner);
+      container.appendChild(item);
+    }
+  }
+
+  function renderSummary() {
+    show(els.summaryLoading, state.loadingList);
+    show(els.summaryError, Boolean(state.listError) && !state.loadingList);
+    els.summaryError.textContent = state.listError;
+    const empty = !state.loadingList && !state.listError && state.sightings.length === 0;
+    show(els.summaryEmpty, empty);
+    show(els.summaryBody, !state.loadingList && !state.listError && !empty);
+
+    const total = state.sightings.length;
+    els.summaryTotal.textContent = state.loadingList
+      ? ""
+      : total === 1
+        ? "1 sighting logged"
+        : `${total} sightings logged`;
+    if (empty || state.loadingList || state.listError) return;
+
+    const todCounts = Object.fromEntries(DAY_PERIODS.map((period) => [period.id, 0]));
+    const monthCounts = Array(12).fill(0);
+    const locCounts = new Map(creekReaches.map((reach) => [reach.id, 0]));
+
+    for (const sighting of state.sightings) {
+      const clock = observedClock(sighting.observed_at);
+      if (clock) {
+        todCounts[dayPeriodFor(clock.hour).id] += 1;
+        monthCounts[clock.month] += 1;
+      }
+      const reach = reachFor(sighting.latitude);
+      locCounts.set(reach.id, (locCounts.get(reach.id) || 0) + 1);
+    }
+
+    renderBarList(
+      els.statTod,
+      DAY_PERIODS.map((period) => ({
+        name: period.name,
+        hint: period.hint,
+        count: todCounts[period.id],
+      }))
+    );
+    renderBarList(
+      els.statToy,
+      MONTHS.map((name, index) => ({
+        name,
+        count: monthCounts[index],
+      }))
+    );
+
+    const locationRows = creekReaches.map((reach) => ({
+      name: reach.name,
+      count: locCounts.get(reach.id) || 0,
+      onSelect: () => {
+        const band = reachBand(reach);
+        if (!state.map) return;
+        state.map.panTo({ lat: band.lat, lng: band.lng });
+        if (state.map.getZoom() < 16) state.map.setZoom(16);
+      },
+    }));
+    for (const extra of [
+      { id: "north-of-area", name: "North of Photography Drive" },
+      { id: "south-of-area", name: "South of Bell Street" },
+    ]) {
+      const count = locCounts.get(extra.id) || 0;
+      if (!count) continue;
+      locationRows.push({ name: extra.name, count });
+    }
+    renderBarList(els.statLoc, locationRows);
+  }
+
+  function openSummary() {
+    closeInfoWindow({ force: true });
+    setMode("summary");
+    renderSummary();
   }
 
   function snakeIcon() {
@@ -462,6 +635,7 @@
     state.loadingList = true;
     state.listError = "";
     renderList();
+    renderSummary();
     try {
       const data = await fetchJson("api/sightings");
       state.sightings = data.items || [];
@@ -471,6 +645,7 @@
     } finally {
       state.loadingList = false;
       renderList();
+      renderSummary();
       syncMapMarkers();
     }
   }
@@ -536,8 +711,11 @@
 
   els.newBtn.addEventListener("click", openForm);
   els.emptyNewBtn.addEventListener("click", openForm);
+  els.summaryEmptyNew.addEventListener("click", openForm);
   els.formCancel.addEventListener("click", backToList);
   els.detailBack.addEventListener("click", backToList);
+  els.summaryBtn.addEventListener("click", openSummary);
+  els.summaryBack.addEventListener("click", backToList);
 
   els.speciesPicker.addEventListener("click", (event) => {
     const card = event.target.closest(".species-card");
