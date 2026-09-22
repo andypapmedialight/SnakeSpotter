@@ -105,7 +105,7 @@
     hoverCloseTimer: null,
     hoveredSightingId: null,
     stickySightingId: null,
-    galleryReturn: "list",
+    galleryPicking: false,
   };
 
   function show(el, on = true) {
@@ -125,21 +125,56 @@
   function setMode(mode) {
     state.mode = mode;
     show(els.listView, mode === "list");
-    show(els.formView, mode === "form");
     show(els.detailView, mode === "detail");
     show(els.summaryView, mode === "summary");
-    show(els.galleryView, mode === "gallery");
-    show(
-      els.mapHint,
-      (mode === "form" || (mode === "gallery" && state.galleryReturn === "form")) &&
-        state.mapsReady &&
-        !state.mapsFailed
-    );
-    if (mode !== "form" && mode !== "gallery" && state.pickMarker) {
+  }
+
+  function isFormOpen() {
+    return Boolean(els.formView && els.formView.open);
+  }
+
+  function isGalleryOpen() {
+    return Boolean(els.galleryView && els.galleryView.open);
+  }
+
+  function refreshMap() {
+    if (!state.map || !window.google || !google.maps) return;
+    google.maps.event.trigger(state.map, "resize");
+  }
+
+  function openForm({ reset = true } = {}) {
+    if (reset) resetForm();
+    closeInfoWindow({ force: true });
+    if (!isFormOpen()) els.formView.show();
+    document.body.classList.add("form-open");
+    show(els.mapHint, state.mapsReady && !state.mapsFailed);
+    window.setTimeout(refreshMap, 50);
+    if (reset) els.species.focus();
+  }
+
+  function closeForm() {
+    closeGallery();
+    if (isFormOpen()) els.formView.close();
+    document.body.classList.remove("form-open");
+    show(els.mapHint, false);
+    if (state.pickMarker) {
       state.pickMarker.setMap(null);
       state.pickMarker = null;
     }
-    if (mode === "form") closeInfoWindow({ force: true });
+    window.setTimeout(refreshMap, 50);
+  }
+
+  function openGallery() {
+    state.galleryPicking = isFormOpen();
+    show(els.galleryPickHint, state.galleryPicking);
+    highlightSpecies(els.species.value);
+    if (!isGalleryOpen()) els.galleryView.showModal();
+    document.body.classList.add("gallery-open");
+  }
+
+  function closeGallery() {
+    if (isGalleryOpen()) els.galleryView.close();
+    document.body.classList.remove("gallery-open");
   }
 
   function toLocalInputValue(date) {
@@ -404,32 +439,10 @@
   }
 
   function openSummary() {
+    closeForm();
     closeInfoWindow({ force: true });
     setMode("summary");
     renderSummary();
-  }
-
-  function openGallery() {
-    const from = state.mode === "gallery" ? state.galleryReturn : state.mode;
-    state.galleryReturn = from === "gallery" ? "list" : from;
-    const picking = state.galleryReturn === "form";
-    show(els.galleryPickHint, picking);
-    highlightSpecies(els.species.value);
-    setMode("gallery");
-  }
-
-  function closeGallery() {
-    const target = state.galleryReturn || "list";
-    if (target === "summary") {
-      openSummary();
-      return;
-    }
-    if (target === "detail" && state.selectedId) {
-      openDetail(state.selectedId);
-      return;
-    }
-    setMode(target === "form" ? "form" : "list");
-    if (target !== "form") renderList();
   }
 
   function snakeIcon() {
@@ -673,10 +686,12 @@
       streetViewControl: false,
       fullscreenControl: true,
       mapTypeControl: true,
+      gestureHandling: "greedy",
+      clickableIcons: false,
     });
     state.map.addListener("click", (event) => {
       closeInfoWindow({ force: true });
-      if (state.mode !== "form") setMode("form");
+      openForm({ reset: !isFormOpen() });
       setPickPosition(event.latLng.lat(), event.latLng.lng());
     });
     syncMapMarkers();
@@ -710,13 +725,12 @@
     }
   }
 
-  function openForm() {
-    resetForm();
-    setMode("form");
-    els.species.focus();
+  function openFormFromButton() {
+    openForm({ reset: true });
   }
 
   async function openDetail(id) {
+    closeForm();
     state.selectedId = id;
     const listed = state.sightings.find((item) => item.id === id);
     if (listed) openInfoWindow(listed, { sticky: true });
@@ -775,24 +789,48 @@
     renderList();
   }
 
-  els.newBtn.addEventListener("click", openForm);
-  els.emptyNewBtn.addEventListener("click", openForm);
-  els.summaryEmptyNew.addEventListener("click", openForm);
-  els.formCancel.addEventListener("click", backToList);
+  els.newBtn.addEventListener("click", openFormFromButton);
+  els.emptyNewBtn.addEventListener("click", openFormFromButton);
+  els.summaryEmptyNew.addEventListener("click", openFormFromButton);
+  els.formCancel.addEventListener("click", closeForm);
   els.detailBack.addEventListener("click", backToList);
   els.summaryBtn.addEventListener("click", openSummary);
   els.summaryBack.addEventListener("click", backToList);
   els.galleryBtn.addEventListener("click", openGallery);
   els.formGalleryBtn.addEventListener("click", openGallery);
   els.galleryBack.addEventListener("click", closeGallery);
+  els.formView.addEventListener("close", () => {
+    document.body.classList.remove("form-open");
+    show(els.mapHint, false);
+  });
+  els.galleryView.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeGallery();
+  });
+  els.galleryView.addEventListener("close", () => {
+    document.body.classList.remove("gallery-open");
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (isGalleryOpen()) {
+      event.preventDefault();
+      closeGallery();
+      return;
+    }
+    if (isFormOpen()) {
+      event.preventDefault();
+      closeForm();
+    }
+  });
 
   els.speciesPicker.addEventListener("click", (event) => {
     const card = event.target.closest(".species-card");
     if (!card) return;
     highlightSpecies(card.dataset.species);
-    if (state.galleryReturn === "form") {
+    if (state.galleryPicking && isFormOpen()) {
       els.species.value = card.dataset.species;
-      setMode("form");
+      closeGallery();
+      els.species.focus();
     }
   });
   els.species.addEventListener("input", () => highlightSpecies(els.species.value));
