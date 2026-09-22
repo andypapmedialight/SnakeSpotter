@@ -1,10 +1,10 @@
 (() => {
   const config = window.SNAKESPOTTER || { mapsEnabled: false };
   const mapArea = config.map || {
-    center: { lat: -37.7285, lng: 144.977 },
-    zoom: 15,
+    center: { lat: -37.7325, lng: 144.977 },
+    zoom: 14,
     minZoom: 13,
-    bounds: { north: -37.7125, south: -37.746, east: 144.993, west: 144.963 },
+    bounds: { north: -37.7125, south: -37.752, east: 144.993, west: 144.963 },
   };
 
   const els = {
@@ -54,6 +54,7 @@
     map: null,
     markers: [],
     pickMarker: null,
+    snakeIcon: null,
   };
 
   function show(el, on = true) {
@@ -169,15 +170,34 @@
     }
   }
 
+  function snakeIcon() {
+    if (state.snakeIcon) return state.snakeIcon;
+    state.snakeIcon = {
+      url: new URL("static/marker-snake.png", window.location.href).href,
+      scaledSize: new google.maps.Size(36, 71),
+      anchor: new google.maps.Point(18, 70),
+    };
+    return state.snakeIcon;
+  }
+
+  function placeSnakeMarker(position, title) {
+    return new google.maps.Marker({
+      map: state.map,
+      position,
+      title,
+      icon: snakeIcon(),
+      optimized: false,
+    });
+  }
+
   function syncMapMarkers() {
     if (!state.map || !window.google || !google.maps) return;
     for (const marker of state.markers) marker.setMap(null);
     state.markers = state.sightings.map((sighting) => {
-      const marker = new google.maps.Marker({
-        map: state.map,
-        position: { lat: sighting.latitude, lng: sighting.longitude },
-        title: sighting.species,
-      });
+      const marker = placeSnakeMarker(
+        { lat: sighting.latitude, lng: sighting.longitude },
+        sighting.species
+      );
       marker.addListener("click", () => openDetail(sighting.id));
       return marker;
     });
@@ -201,11 +221,8 @@
     if (!state.map || !window.google) return;
     const position = { lat: Number(lat), lng: Number(lng) };
     if (!state.pickMarker) {
-      state.pickMarker = new google.maps.Marker({
-        map: state.map,
-        position,
-        title: "New sighting",
-      });
+      state.pickMarker = placeSnakeMarker(position, "New sighting");
+      state.pickMarker.setZIndex(google.maps.Marker.MAX_ZINDEX + 1);
     } else {
       state.pickMarker.setPosition(position);
     }

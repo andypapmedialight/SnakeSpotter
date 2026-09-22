@@ -59,6 +59,6 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 - Open a sighting and jump to its pin
 - Click the map around Edgars Creek, Coburg North to drop a pin
 
-The map stays on that creek corridor. Pins outside the area are rejected.
+The map stays on that creek corridor, down to De Chene Reserve. Pins outside the area are rejected.
 
 Local data lives in `data/sightings.db`. Hub data lives in `/var/lib/snakespotter/sightings.db`.
