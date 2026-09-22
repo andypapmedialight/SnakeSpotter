@@ -28,11 +28,8 @@
 
     <header class="site-header">
       <div class="brand">
-        <img src="static/favicon.svg" alt="" width="36" height="36" />
-        <div>
-          <p class="eyebrow">Field log</p>
-          <h1>SnakeSpotter</h1>
-        </div>
+        <p class="eyebrow">Field log</p>
+        <h1>SnakeSpotter</h1>
       </div>
       <p class="lede">
         Record where you saw a snake, what it was, and when — then pin it on the map.
@@ -46,21 +43,14 @@
       <section class="map-pane" aria-label="Sighting map">
         <div id="map" class="map" role="application" aria-label="Google Map"></div>
         <div id="map-fallback" class="map-fallback" hidden>
-          <svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true">
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3"
-              stroke-linecap="round"
-              d="M12 44c8-18 32-18 40 0M20 28c4-8 20-8 24 0"
-            />
-            <circle cx="32" cy="18" r="4" fill="currentColor" />
-          </svg>
-          <h2>Map unavailable</h2>
-          <p>
-            Add a Google Maps JavaScript API key as <code>GOOGLE_MAPS_API_KEY</code>
-            to pick locations by clicking the map. Until then, type coordinates in the form.
-          </p>
+          <div class="map-fallback-copy">
+            <p class="eyebrow">Location</p>
+            <h2>Map unavailable</h2>
+            <p>
+              Add a Google Maps JavaScript API key as <code>GOOGLE_MAPS_API_KEY</code>
+              to pick locations by clicking the map. Until then, type coordinates in the form.
+            </p>
+          </div>
         </div>
         <p id="map-hint" class="map-hint" hidden>Click the map to drop a pin.</p>
       </section>
