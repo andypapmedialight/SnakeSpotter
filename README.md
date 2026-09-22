@@ -4,6 +4,8 @@ A local field log for snake sightings. Record species, notes, and time, then pin
 
 Sightings are stored in a SQLite file on disk. There is no account system and no hosted database.
 
+Source of truth: [github.com/andypapmedialight/SnakeSpotter](https://github.com/andypapmedialight/SnakeSpotter) (`main`). Anthemic Hub deploys from that branch, not from a laptop working copy.
+
 ## Run locally
 
 ```bash
@@ -24,6 +26,32 @@ Set `GOOGLE_MAPS_API_KEY` in `.env` or your shell to enable the map picker and p
 
 Without a key the app stays usable: a banner explains that the map is offline, and you enter latitude and longitude by hand.
 
+**Never commit the key.** On Anthemic Hub it is a GitHub Actions secret that lands in `/etc/snakespotter/snakespotter.env` on the droplet.
+
+```bash
+gh secret set GOOGLE_MAPS_API_KEY --repo andypapmedialight/SnakeSpotter
+```
+
+Then push `main` (or run **Actions → Deploy**) so CI installs the env file. If the secret is empty, the hub app still serves; maps stay in the fallback.
+
+## Anthemic Hub
+
+Public URL: [https://anthemic-developments.com/snakespotter/](https://anthemic-developments.com/snakespotter/)
+
+Push to `main` → GitHub Actions rsyncs into `/home/deploy/incoming-snakespotter/` → `sudo /usr/local/bin/snakespotter-deploy-apply.sh` promotes into `/opt/snakespotter`, SQLite at `/var/lib/snakespotter/sightings.db`, systemd `snakespotter.service` on `127.0.0.1:8075`. nginx in **anthemic-ops** proxies `/snakespotter/`.
+
+One-time droplet bootstrap (from GitHub, as root):
+
+```bash
+git clone --depth 1 --branch main \
+  https://github.com/andypapmedialight/SnakeSpotter.git /tmp/SnakeSpotter
+/tmp/SnakeSpotter/scripts/droplet/bootstrap-snakespotter.sh \
+  /tmp/SnakeSpotter/scripts/droplet/snakespotter-deploy-apply.sh \
+  /tmp/SnakeSpotter/scripts/droplet/snakespotter.service
+```
+
+Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_PORT`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
+
 ## What you can do
 
 - Log a sighting (species, notes, datetime, lat/lng)
@@ -31,4 +59,4 @@ Without a key the app stays usable: a banner explains that the map is offline, a
 - Open a sighting and jump to its pin
 - Click the map to drop a pin when Maps is available
 
-Data lives in `data/sightings.db`.
+Local data lives in `data/sightings.db`. Hub data lives in `/var/lib/snakespotter/sightings.db`.

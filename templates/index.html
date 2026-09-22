@@ -8,14 +8,14 @@
       name="description"
       content="Log snake sightings with species, notes, time, and a map pin."
     />
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="static/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Figtree:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="static/styles.css" />
   </head>
   <body>
     <a class="skip-link" href="#sidebar">Skip to sightings</a>
@@ -28,7 +28,7 @@
 
     <header class="site-header">
       <div class="brand">
-        <img src="/static/favicon.svg" alt="" width="36" height="36" />
+        <img src="static/favicon.svg" alt="" width="36" height="36" />
         <div>
           <p class="eyebrow">Field log</p>
           <h1>SnakeSpotter</h1>
@@ -209,7 +209,7 @@
         mapsEnabled: {% if maps_enabled %}true{% else %}false{% endif %},
       };
     </script>
-    <script src="/static/app.js" defer></script>
+    <script src="static/app.js" defer></script>
     {% if maps_enabled %}
     <script>
       function initGoogleMaps() {

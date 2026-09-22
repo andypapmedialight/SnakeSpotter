@@ -42,6 +42,11 @@ def home(request: Request) -> HTMLResponse:
     )
 
 
+@app.get("/health")
+def health() -> dict[str, bool]:
+    return {"ok": True}
+
+
 @app.get("/api/config", response_model=AppConfig)
 def read_config() -> AppConfig:
     return AppConfig(maps_enabled=settings.maps_enabled)

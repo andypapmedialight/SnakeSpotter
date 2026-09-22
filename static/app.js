@@ -249,7 +249,7 @@
     state.listError = "";
     renderList();
     try {
-      const data = await fetchJson("/api/sightings");
+      const data = await fetchJson("api/sightings");
       state.sightings = data.items || [];
     } catch (error) {
       state.listError = error.message || "Could not load sightings.";
@@ -275,7 +275,7 @@
     show(els.detailBody, false);
     renderList();
     try {
-      const sighting = await fetchJson(`/api/sightings/${id}`);
+      const sighting = await fetchJson(`api/sightings/${id}`);
       els.detailHeading.textContent = sighting.species;
       els.detailWhen.textContent = formatWhen(sighting.observed_at);
       els.detailWhere.textContent = formatCoords(sighting.latitude, sighting.longitude);
@@ -352,7 +352,7 @@
     els.saveBtn.disabled = true;
     els.saveBtn.textContent = "Saving…";
     try {
-      const created = await fetchJson("/api/sightings", {
+      const created = await fetchJson("api/sightings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

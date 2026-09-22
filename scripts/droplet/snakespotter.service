@@ -1,0 +1,46 @@
+# =============================================================================
+# SnakeSpotter — systemd unit
+# =============================================================================
+# Installed by snakespotter-deploy-apply.sh to
+# /etc/systemd/system/snakespotter.service
+#
+# Logs: journalctl -u snakespotter -f
+# =============================================================================
+[Unit]
+Description=SnakeSpotter sighting log (FastAPI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=snakespotter
+Group=snakespotter
+WorkingDirectory=/opt/snakespotter
+
+EnvironmentFile=/etc/snakespotter/snakespotter.env
+Environment=PYTHONUNBUFFERED=1
+
+ExecStart=/opt/snakespotter/venv/bin/python -m app.main
+
+Restart=always
+RestartSec=2
+TimeoutStartSec=30
+TimeoutStopSec=15
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+ReadWritePaths=/var/lib/snakespotter
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,121 @@
+name: Deploy
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-snakespotter
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Stage maps key (private incoming only, never in git)
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p incoming-snakespotter/private
+          key="${GOOGLE_MAPS_API_KEY:-}"
+          key="${key//$'\r'/}"
+          key="${key//$'\n'/}"
+          {
+            echo "HOST=127.0.0.1"
+            echo "PORT=8075"
+            echo "DATABASE_PATH=/var/lib/snakespotter/sightings.db"
+            printf 'GOOGLE_MAPS_API_KEY=%s\n' "${key}"
+          } > incoming-snakespotter/private/snakespotter.env
+          chmod 600 incoming-snakespotter/private/snakespotter.env
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Configure SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Upload to Droplet
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+          RSYNC_SSH="ssh -p ${DEPLOY_PORT}"
+          DEST="${DEPLOY_USER}@${DEPLOY_HOST}:incoming-snakespotter/"
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'mkdir -p /home/'"${DEPLOY_USER}"'/incoming-snakespotter'
+          rsync -avz -e "${RSYNC_SSH}" \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.venv' \
+            --exclude 'venv' \
+            --exclude '__pycache__' \
+            --exclude '.pytest_cache' \
+            --exclude '.idea' \
+            --exclude '.env' \
+            --exclude 'data/*.db' \
+            ./ "${DEST}"
+          rsync -avz -e "${RSYNC_SSH}" \
+            ./scripts/droplet/snakespotter.service \
+            ./scripts/droplet/snakespotter-deploy-apply.sh \
+            "${DEST}"
+          rsync -rlvz --no-perms -e "${RSYNC_SSH}" \
+            ./incoming-snakespotter/private/ \
+            "${DEST}private/"
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'chmod 600 incoming-snakespotter/private/snakespotter.env 2>/dev/null || true'
+
+      - name: Validate upload contents on Droplet
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          IN="/home/${DEPLOY_USER}/incoming-snakespotter"
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "test -f ${IN}/app/main.py && test -f ${IN}/requirements.txt && test -f ${IN}/snakespotter-deploy-apply.sh && test -f ${IN}/snakespotter.service" \
+            || { echo "incoming-snakespotter missing expected files after upload"; exit 1; }
+
+      - name: Apply on Droplet
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          IN="/home/${DEPLOY_USER}/incoming-snakespotter"
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "sudo /usr/local/bin/snakespotter-deploy-apply.sh '${IN}'"
+
+      - name: Smoke test (loopback, then public if nginx is up)
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'curl -fsS --max-time 5 http://127.0.0.1:8075/health | grep -q "\"ok\""' \
+            || { echo "loopback /health failed"; exit 1; }
+          code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 10 \
+            "https://anthemic-developments.com/snakespotter/" || echo "000")
+          if [[ "${code}" == "200" ]]; then
+            echo "public /snakespotter/ 200"
+            curl -fsS --max-time 10 "https://anthemic-developments.com/snakespotter/api/config" | grep -q 'maps_enabled'
+          else
+            echo "public HTTPS not ready yet (HTTP ${code}) — loopback is healthy; finish anthemic-ops nginx"
+          fi
