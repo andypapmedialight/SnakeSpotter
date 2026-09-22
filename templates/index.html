@@ -90,8 +90,8 @@
             <fieldset class="species-fieldset">
               <legend>Species</legend>
               <p class="field-hint">
-                Compare these photos with what you saw, then tap a match. Choose Unsure if you
-                don’t know.
+                Compare these photos with what you saw, then tap a match. Each card shows how
+                venomous that snake is. Choose Unsure if you don’t know.
               </p>
               <div class="species-grid" id="species-picker">
                 {% for item in species %}
@@ -104,7 +104,7 @@
                   {% if item.image %}
                   <img
                     src="static/species/{{ item.image }}"
-                    alt="{{ item.name }}"
+                    alt="{{ item.name }}, {{ item.venom_label }}"
                     width="400"
                     height="250"
                   />
@@ -112,6 +112,7 @@
                   <span class="species-card-empty">No photo — not sure which snake</span>
                   {% endif %}
                   <span class="species-card-name">{{ item.name }}</span>
+                  <span class="venom-badge venom-{{ item.venom_level }}">{{ item.venom_label }}</span>
                   {% if item.credit and item.license %}
                   <span class="species-card-credit">{{ item.credit }} · {{ item.license }}</span>
                   {% endif %}
@@ -230,6 +231,8 @@
           <article id="detail-body" hidden>
             <p class="eyebrow">Sighting</p>
             <h2 id="detail-heading"></h2>
+            <p id="detail-venom" class="venom-badge" hidden></p>
+            <p id="detail-venom-note" class="venom-note" hidden></p>
             <figure id="detail-species-photo" class="detail-photo" hidden>
               <img id="detail-species-img" alt="" />
               <figcaption id="detail-species-credit" class="species-card-credit"></figcaption>

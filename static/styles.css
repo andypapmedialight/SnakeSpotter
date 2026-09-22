@@ -333,6 +333,54 @@ code {
   line-height: 1.3;
 }
 
+.venom-badge {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.25;
+  padding: 0.14rem 0.42rem;
+  border-radius: 999px;
+}
+
+.venom-extreme {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.venom-high {
+  background: #f6e6d8;
+  color: #8a3d12;
+}
+
+.venom-moderate {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+}
+
+.venom-mild {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.venom-unknown {
+  background: var(--canvas);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.venom-note {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+#detail-venom {
+  margin-top: 0.45rem;
+}
+
 .detail-photo {
   margin: 0.85rem 0 0;
 }
@@ -468,6 +516,10 @@ code {
   font-size: 1.02rem;
 }
 
+.sighting-card .venom-badge {
+  margin-top: 0.28rem;
+}
+
 .sighting-card p {
   color: var(--muted);
   font-size: 0.88rem;
@@ -506,8 +558,12 @@ code {
   font-size: 1.02rem;
   font-weight: 650;
   letter-spacing: -0.02em;
-  margin: 0 1.4rem 0.55rem 0;
+  margin: 0 1.4rem 0.4rem 0;
   line-height: 1.2;
+}
+
+.iw-card .venom-badge {
+  margin: 0 1.4rem 0.55rem 0;
 }
 
 .iw-photo {

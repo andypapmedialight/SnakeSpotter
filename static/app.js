@@ -72,6 +72,8 @@
     detailError: document.getElementById("detail-error"),
     detailBody: document.getElementById("detail-body"),
     detailHeading: document.getElementById("detail-heading"),
+    detailVenom: document.getElementById("detail-venom"),
+    detailVenomNote: document.getElementById("detail-venom-note"),
     detailPhoto: document.getElementById("detail-species-photo"),
     detailSpeciesImg: document.getElementById("detail-species-img"),
     detailSpeciesCredit: document.getElementById("detail-species-credit"),
@@ -192,6 +194,25 @@
     return speciesCatalog.find((item) => item.name.toLowerCase() === needle) || null;
   }
 
+  function venomInfo(name) {
+    const match = speciesRecord(name);
+    const allowed = new Set(["extreme", "high", "moderate", "mild", "unknown"]);
+    const level = match && allowed.has(match.venom_level) ? match.venom_level : "unknown";
+    return {
+      level,
+      label: (match && match.venom_label) || "Unknown — treat as dangerous",
+      note: (match && match.venom_note) || "Treat as highly venomous until identified. Do not handle.",
+    };
+  }
+
+  function makeVenomBadge(name) {
+    const info = venomInfo(name);
+    const badge = document.createElement("span");
+    badge.className = `venom-badge venom-${info.level}`;
+    badge.textContent = info.label;
+    return badge;
+  }
+
   function highlightSpecies(name) {
     const needle = (name || "").trim().toLowerCase();
     for (const card of els.speciesPicker.querySelectorAll(".species-card")) {
@@ -246,12 +267,15 @@
       button.type = "button";
       button.className = "sighting-card";
       if (sighting.id === state.selectedId) button.classList.add("is-active");
-      button.innerHTML = `<h3></h3><p></p>`;
-      button.querySelector("h3").textContent = sighting.species;
-      button.querySelector("p").textContent = `${formatWhen(sighting.observed_at)} · ${formatCoords(
+      button.replaceChildren();
+      const title = document.createElement("h3");
+      title.textContent = sighting.species;
+      const when = document.createElement("p");
+      when.textContent = `${formatWhen(sighting.observed_at)} · ${formatCoords(
         sighting.latitude,
         sighting.longitude
       )}`;
+      button.append(title, makeVenomBadge(sighting.species), when);
       button.addEventListener("click", () => openDetail(sighting.id));
       button.addEventListener("mouseenter", () => openInfoWindow(sighting));
       button.addEventListener("mouseleave", () => scheduleHoverClose());
@@ -441,7 +465,7 @@
     const title = document.createElement("h3");
     title.className = "iw-title";
     title.textContent = sighting.species;
-    card.append(kicker, title);
+    card.append(kicker, title, makeVenomBadge(sighting.species));
 
     const match = speciesRecord(sighting.species);
     if (match && match.image && !/[\\/]/.test(match.image)) {
@@ -449,7 +473,7 @@
       figure.className = "iw-photo";
       const img = document.createElement("img");
       img.src = `static/species/${match.image}`;
-      img.alt = match.name;
+        img.alt = `${match.name}, ${venomInfo(match.name).label}`;
       figure.appendChild(img);
       if (match.credit && match.license) {
         const caption = document.createElement("figcaption");
@@ -669,9 +693,15 @@
       const sighting = await fetchJson(`api/sightings/${id}`);
       els.detailHeading.textContent = sighting.species;
       const match = speciesRecord(sighting.species);
+      const venom = venomInfo(sighting.species);
+      els.detailVenom.className = `venom-badge venom-${venom.level}`;
+      els.detailVenom.textContent = venom.label;
+      show(els.detailVenom, true);
+      els.detailVenomNote.textContent = venom.note;
+      show(els.detailVenomNote, true);
       if (match && match.image) {
         els.detailSpeciesImg.src = `static/species/${match.image}`;
-        els.detailSpeciesImg.alt = match.name;
+        els.detailSpeciesImg.alt = `${match.name}, ${venom.label}`;
         els.detailSpeciesCredit.textContent =
           match.credit && match.license ? `${match.credit} · ${match.license}` : "";
         show(els.detailPhoto, true);
