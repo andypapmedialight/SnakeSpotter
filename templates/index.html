@@ -38,6 +38,9 @@
         <button type="button" class="btn btn-quiet" id="gallery-btn" aria-haspopup="dialog">
           Snake gallery
         </button>
+        <button type="button" class="btn btn-quiet" id="safety-btn" aria-haspopup="dialog">
+          Safety
+        </button>
         <button type="button" class="btn btn-quiet" id="summary-btn">Summary</button>
         <button type="button" class="btn btn-primary" id="new-btn">Log a sighting</button>
         <p id="admin-status" class="admin-status" hidden>Moderating</p>
@@ -255,6 +258,11 @@
         Photos and venom for snakes recorded along this creek. Open this when you want
         to identify what you saw.
       </p>
+      <p class="field-hint">
+        If you have just seen a snake, read
+        <button type="button" class="text-link" id="gallery-safety-btn">safety tips</button>
+        before you get closer.
+      </p>
       <p id="gallery-pick-hint" class="field-hint" hidden>
         Tap a photo to set the species on your sighting.
       </p>
@@ -287,6 +295,60 @@
         </button>
         {% endfor %}
       </div>
+    </dialog>
+
+    <dialog id="safety-view" class="sheet sheet-gallery sheet-safety" aria-labelledby="safety-heading">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">If you spot a snake</p>
+          <h2 id="safety-heading">Safety tips</h2>
+        </div>
+        <button type="button" class="btn btn-quiet" id="safety-back">Close</button>
+      </div>
+      <p class="muted form-intro">
+        Snakes along Edgars Creek want to be left alone. Several species here are
+        highly venomous. Do not handle any snake — including ones that look small or dead.
+      </p>
+
+      <section class="tip-block" aria-labelledby="tip-space-heading">
+        <h3 id="tip-space-heading">Give it space</h3>
+        <ul class="tip-list">
+          <li>Stop. Keep still for a moment so you don't startle it.</li>
+          <li>Back away slowly. Don't step over it, kick it, or run past it.</li>
+          <li>Don't try to catch, kill, or move it. That's how most bites happen.</li>
+          <li>Don't corner it or block its path to water or cover.</li>
+          <li>Warn people nearby, especially children. Keep everyone several metres back.</li>
+          <li>Watch feet and hands near long grass, rocks, logs, and the water's edge.</li>
+          <li>Wear closed shoes on the trail. Don't reach into hollows or under debris.</li>
+        </ul>
+      </section>
+
+      <section class="tip-block" aria-labelledby="tip-pets-heading">
+        <h3 id="tip-pets-heading">Keep pets safe</h3>
+        <ul class="tip-list">
+          <li>Call dogs in at once and put them on a lead. Don't let them sniff, bark at, or attack the snake.</li>
+          <li>Keep cats indoors when snakes are turning up along the creek.</li>
+          <li>If a pet is bitten, keep it as still and quiet as you can and go to a vet immediately — don't wait for signs. Call ahead if you can.</li>
+          <li>Don't try to catch the snake for the vet. A photo from a safe distance is enough if it has already gone.</li>
+        </ul>
+      </section>
+
+      <section class="tip-block tip-emergency" aria-labelledby="tip-bite-heading">
+        <h3 id="tip-bite-heading">If a person is bitten</h3>
+        <p class="tip-call">Call 000 immediately. Treat every bite as serious, even if it looks minor.</p>
+        <ul class="tip-list">
+          <li>Keep the person still and calm. Don't walk them around.</li>
+          <li>Apply a pressure immobilisation bandage over the bite and up the limb if you know how. Ambulance will talk you through it.</li>
+          <li>Don't wash, cut, suck, or ice the bite, and don't use a tourniquet.</li>
+          <li>Don't try to catch the snake. Tell the ambulance what it looked like if you saw it.</li>
+        </ul>
+      </section>
+
+      <p class="tip-note">
+        General public advice for this creek, not a substitute for emergency services or a vet.
+        People: 000. Pets: a vet, straight away.
+      </p>
     </dialog>
 
     <dialog id="admin-view" class="sheet sheet-gallery sheet-admin" aria-labelledby="admin-heading">

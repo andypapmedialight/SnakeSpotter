@@ -84,6 +84,7 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 - Log a sighting or open the gallery in a popup (the map stays usable while you log)
 - Open Summary for counts by time of day, month, and creek stretch
 - Open Snake gallery from the top menu (or from the log form) to compare identification photos
+- Open Safety for what to do if you spot a snake, including pets and bite first aid
 - Sign in as admin (if a password is configured) to remove a sighting
 
 The map stays on that creek corridor, from Photography Drive to Bell Street and Newlands Road to Whitton Parade. Pins outside the area are rejected.

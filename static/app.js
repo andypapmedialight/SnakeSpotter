@@ -40,6 +40,7 @@
     detailView: document.getElementById("detail-view"),
     summaryView: document.getElementById("summary-view"),
     galleryView: document.getElementById("gallery-view"),
+    safetyView: document.getElementById("safety-view"),
     listLoading: document.getElementById("list-loading"),
     listError: document.getElementById("list-error"),
     listEmpty: document.getElementById("list-empty"),
@@ -61,6 +62,9 @@
     formGalleryBtn: document.getElementById("form-gallery-btn"),
     galleryBack: document.getElementById("gallery-back"),
     galleryPickHint: document.getElementById("gallery-pick-hint"),
+    gallerySafetyBtn: document.getElementById("gallery-safety-btn"),
+    safetyBtn: document.getElementById("safety-btn"),
+    safetyBack: document.getElementById("safety-back"),
     adminBtn: document.getElementById("admin-btn"),
     adminStatus: document.getElementById("admin-status"),
     adminView: document.getElementById("admin-view"),
@@ -157,6 +161,14 @@
     return Boolean(els.confirmView && els.confirmView.open);
   }
 
+  function isGalleryOpen() {
+    return Boolean(els.galleryView && els.galleryView.open);
+  }
+
+  function isSafetyOpen() {
+    return Boolean(els.safetyView && els.safetyView.open);
+  }
+
   function applyAdminUi() {
     document.body.classList.toggle("admin-on", state.adminSignedIn);
     if (els.adminBtn) {
@@ -186,6 +198,7 @@
 
   function openAdmin() {
     closeGallery();
+    closeSafety();
     if (els.adminError) {
       els.adminError.hidden = true;
       els.adminError.textContent = "";
@@ -297,6 +310,7 @@
 
   function openGallery() {
     if (!els.galleryView) return;
+    closeSafety();
     state.galleryPicking = isFormOpen();
     if (els.galleryPickHint) show(els.galleryPickHint, state.galleryPicking);
     highlightSpecies(els.species ? els.species.value : "");
@@ -307,6 +321,19 @@
   function closeGallery() {
     if (isGalleryOpen()) els.galleryView.close();
     document.body.classList.remove("gallery-open");
+  }
+
+  function openSafety() {
+    if (!els.safetyView) return;
+    closeGallery();
+    closeAdmin();
+    if (!isSafetyOpen()) els.safetyView.showModal();
+    document.body.classList.add("safety-open");
+  }
+
+  function closeSafety() {
+    if (isSafetyOpen()) els.safetyView.close();
+    document.body.classList.remove("safety-open");
   }
 
   function toLocalInputValue(date) {
@@ -950,6 +977,15 @@
   if (els.galleryBtn) els.galleryBtn.addEventListener("click", openGallery);
   if (els.formGalleryBtn) els.formGalleryBtn.addEventListener("click", openGallery);
   if (els.galleryBack) els.galleryBack.addEventListener("click", closeGallery);
+  if (els.safetyBtn) els.safetyBtn.addEventListener("click", openSafety);
+  if (els.safetyBack) els.safetyBack.addEventListener("click", closeSafety);
+  if (els.gallerySafetyBtn) {
+    els.gallerySafetyBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openSafety();
+    });
+  }
   els.adminBtn.addEventListener("click", () => {
     if (state.adminSignedIn) {
       signOutAdmin();
@@ -1013,6 +1049,15 @@
   els.galleryView.addEventListener("close", () => {
     document.body.classList.remove("gallery-open");
   });
+  if (els.safetyView) {
+    els.safetyView.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      closeSafety();
+    });
+    els.safetyView.addEventListener("close", () => {
+      document.body.classList.remove("safety-open");
+    });
+  }
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
     if (isConfirmOpen()) {
@@ -1023,6 +1068,11 @@
     if (isAdminOpen()) {
       event.preventDefault();
       closeAdmin();
+      return;
+    }
+    if (isSafetyOpen()) {
+      event.preventDefault();
+      closeSafety();
       return;
     }
     if (isGalleryOpen()) {
