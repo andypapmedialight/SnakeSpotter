@@ -1,6 +1,6 @@
 # SnakeSpotter
 
-A local field log for snake sightings. Record species, notes, and time, then pin the location on a Google Map.
+A field log for snake sightings along Edgars Creek in Coburg North. Record species, notes, and time, then pin the location on the map.
 
 Sightings are stored in a SQLite file on disk. There is no account system and no hosted database.
 
@@ -57,6 +57,8 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 - Log a sighting (species or Unsure, notes, datetime, lat/lng)
 - See every sighting in a list
 - Open a sighting and jump to its pin
-- Click the map to drop a pin when Maps is available
+- Click the map around Edgars Creek, Coburg North to drop a pin
+
+The map stays on that creek corridor. Pins outside the area are rejected.
 
 Local data lives in `data/sightings.db`. Hub data lives in `/var/lib/snakespotter/sightings.db`.

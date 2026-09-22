@@ -6,7 +6,7 @@
     <title>SnakeSpotter</title>
     <meta
       name="description"
-      content="Log snake sightings with species, notes, time, and a map pin."
+      content="Log snake sightings along Edgars Creek in Coburg North."
     />
     <link rel="icon" href="static/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -32,7 +32,7 @@
         <h1>SnakeSpotter</h1>
       </div>
       <p class="lede">
-        Record where you saw a snake, what it was, and when — then pin it on the map.
+        Record snakes along Edgars Creek in Coburg North — what you saw, when, and where.
       </p>
       <button type="button" class="btn btn-primary" id="new-btn">
         Log a sighting
@@ -52,7 +52,7 @@
             </p>
           </div>
         </div>
-        <p id="map-hint" class="map-hint" hidden>Click the map to drop a pin.</p>
+        <p id="map-hint" class="map-hint" hidden>Click the map around Edgars Creek to drop a pin.</p>
       </section>
 
       <aside id="sidebar" class="sidebar">
@@ -68,7 +68,7 @@
           <div id="list-error" class="state state-error" hidden></div>
           <div id="list-empty" class="state empty" hidden>
             <h3>No sightings yet</h3>
-            <p>Pin your first snake on the map, or log coordinates by hand.</p>
+            <p>Pin your first snake around Edgars Creek, or log coordinates by hand.</p>
             <button type="button" class="btn btn-primary" id="empty-new-btn">
               Log a sighting
             </button>
@@ -82,8 +82,8 @@
             <button type="button" class="btn btn-ghost" id="form-cancel">Cancel</button>
           </div>
           <p class="muted form-intro">
-            Species, notes, time, and a location. Click the map to set the pin, or type
-            latitude and longitude.
+            Species, notes, time, and a location around Edgars Creek. Click the map to set
+            the pin, or type latitude and longitude.
           </p>
           <form id="sighting-form" novalidate>
             <label>
@@ -126,10 +126,10 @@
                   name="latitude"
                   type="number"
                   step="0.000001"
-                  min="-90"
-                  max="90"
+                  min="{{ area.SOUTH }}"
+                  max="{{ area.NORTH }}"
                   required
-                  placeholder="-33.8688"
+                  placeholder="{{ area.CENTER_LAT }}"
                 />
               </label>
               <label>
@@ -139,10 +139,10 @@
                   name="longitude"
                   type="number"
                   step="0.000001"
-                  min="-180"
-                  max="180"
+                  min="{{ area.WEST }}"
+                  max="{{ area.EAST }}"
                   required
-                  placeholder="151.2093"
+                  placeholder="{{ area.CENTER_LNG }}"
                 />
               </label>
             </div>
@@ -198,6 +198,17 @@
     <script>
       window.SNAKESPOTTER = {
         mapsEnabled: {% if maps_enabled %}true{% else %}false{% endif %},
+        map: {
+          center: { lat: {{ area.CENTER_LAT }}, lng: {{ area.CENTER_LNG }} },
+          zoom: {{ area.DEFAULT_ZOOM }},
+          minZoom: {{ area.MIN_ZOOM }},
+          bounds: {
+            north: {{ area.NORTH }},
+            south: {{ area.SOUTH }},
+            east: {{ area.EAST }},
+            west: {{ area.WEST }},
+          },
+        },
       };
     </script>
     <script src="static/app.js" defer></script>

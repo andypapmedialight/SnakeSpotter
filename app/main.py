@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from app import area
 from app.config import settings
 from app.db import create_sighting, get_sighting, init_db, list_sightings
 from app.models import AppConfig, ErrorMessage, SightingCreate, SightingList, SightingOut
@@ -21,7 +22,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(
     title="SnakeSpotter",
-    description="A local field log for snake sightings, with a map for pinning locations.",
+    description="A field log for snake sightings along Edgars Creek in Coburg North.",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -38,6 +39,7 @@ def home(request: Request) -> HTMLResponse:
         context={
             "google_maps_api_key": settings.google_maps_api_key.strip(),
             "maps_enabled": settings.maps_enabled,
+            "area": area,
         },
     )
 

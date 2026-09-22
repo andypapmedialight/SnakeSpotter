@@ -1,6 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from app.area import NAME as AREA_NAME
+from app.area import contains as in_survey_area
 
 UNSURE_SPECIES = "Unsure"
 
@@ -26,6 +29,12 @@ class SightingCreate(BaseModel):
     @classmethod
     def strip_notes(cls, value: str) -> str:
         return value.strip()
+
+    @model_validator(mode="after")
+    def pin_in_survey_area(self):
+        if not in_survey_area(self.latitude, self.longitude):
+            raise ValueError(f"Location must be around {AREA_NAME}")
+        return self
 
 
 class SightingOut(BaseModel):

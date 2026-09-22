@@ -1,5 +1,11 @@
 (() => {
   const config = window.SNAKESPOTTER || { mapsEnabled: false };
+  const mapArea = config.map || {
+    center: { lat: -37.72455, lng: 144.97949 },
+    zoom: 15,
+    minZoom: 14,
+    bounds: { north: -37.7125, south: -37.738, east: 144.993, west: 144.969 },
+  };
 
   const els = {
     mapsBanner: document.getElementById("maps-banner"),
@@ -175,25 +181,18 @@
       marker.addListener("click", () => openDetail(sighting.id));
       return marker;
     });
-    if (state.sightings.length === 1) {
-      state.map.setCenter({
-        lat: state.sightings[0].latitude,
-        lng: state.sightings[0].longitude,
-      });
-      state.map.setZoom(12);
-    } else if (state.sightings.length > 1) {
-      const bounds = new google.maps.LatLngBounds();
-      for (const sighting of state.sightings) {
-        bounds.extend({ lat: sighting.latitude, lng: sighting.longitude });
-      }
-      state.map.fitBounds(bounds, 48);
-    }
   }
 
   function focusSighting(sighting) {
     if (!state.map) return;
+    if (!inSurveyArea(sighting.latitude, sighting.longitude)) return;
     state.map.panTo({ lat: sighting.latitude, lng: sighting.longitude });
-    if (state.map.getZoom() < 13) state.map.setZoom(14);
+    if (state.map.getZoom() < 15) state.map.setZoom(16);
+  }
+
+  function inSurveyArea(lat, lng) {
+    const bounds = mapArea.bounds;
+    return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east;
   }
 
   function setPickPosition(lat, lng) {
@@ -221,8 +220,14 @@
     show(els.mapFallback, false);
     show(els.mapsBanner, false);
     state.map = new google.maps.Map(els.map, {
-      center: { lat: 20, lng: 12 },
-      zoom: 3,
+      center: mapArea.center,
+      zoom: mapArea.zoom,
+      minZoom: mapArea.minZoom,
+      maxZoom: 19,
+      restriction: {
+        latLngBounds: mapArea.bounds,
+        strictBounds: true,
+      },
       mapTypeId: "terrain",
       streetViewControl: false,
       fullscreenControl: true,
@@ -332,16 +337,9 @@
       els.formError.hidden = false;
       return;
     }
-    if (
-      Number.isNaN(latitude) ||
-      Number.isNaN(longitude) ||
-      latitude < -90 ||
-      latitude > 90 ||
-      longitude < -180 ||
-      longitude > 180
-    ) {
+    if (Number.isNaN(latitude) || Number.isNaN(longitude) || !inSurveyArea(latitude, longitude)) {
       els.formError.textContent =
-        "Enter a valid latitude (-90 to 90) and longitude (-180 to 180), or click the map.";
+        "Drop a pin around Edgars Creek in Coburg North, or enter coordinates in that area.";
       els.formError.hidden = false;
       return;
     }
