@@ -83,7 +83,7 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 - Click the map around Edgars Creek, Coburg North to drop a pin
 - Log a sighting or open the gallery in a popup (the map stays usable while you log)
 - Open Summary for counts by time of day, month, and creek stretch
-- Open Gallery to compare identification photos when you need them
+- Open Snake gallery from the top menu (or from the log form) to compare identification photos
 - Sign in as admin (if a password is configured) to remove a sighting
 
 The map stays on that creek corridor, from Photography Drive to Bell Street and Newlands Road to Whitton Parade. Pins outside the area are rejected.

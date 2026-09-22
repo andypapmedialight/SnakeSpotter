@@ -892,6 +892,7 @@ button.stat-row:focus-visible {
   margin: 0;
   border-left: 1px solid var(--line);
   overflow: auto;
+  z-index: 12;
 }
 
 .sheet-gallery {
@@ -900,6 +901,7 @@ button.stat-row:focus-visible {
   margin: auto;
   border-radius: var(--radius);
   overflow: auto;
+  z-index: 20;
 }
 
 .sheet-gallery::backdrop {
@@ -910,6 +912,7 @@ button.stat-row:focus-visible {
 .sheet-confirm {
   width: min(24rem, calc(100vw - 1.5rem));
   max-height: min(88dvh, 28rem);
+  z-index: 21;
 }
 
 .sheet-admin::backdrop,
@@ -939,7 +942,7 @@ button.stat-row:focus-visible {
   }
 
   .header-actions .btn {
-    flex: 1 1 auto;
+    flex: 1 1 calc(50% - 0.45rem);
   }
 
   .layout {

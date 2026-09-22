@@ -34,13 +34,15 @@
       <p class="lede">
         Record snakes along Edgars Creek in Coburg North — what you saw, when, and where.
       </p>
-      <div class="header-actions">
-        <p id="admin-status" class="admin-status" hidden>Moderating</p>
-        <button type="button" class="btn btn-quiet" id="admin-btn" hidden>Admin</button>
-        <button type="button" class="btn btn-quiet" id="gallery-btn">Gallery</button>
+      <nav class="header-actions" aria-label="Main">
+        <button type="button" class="btn btn-quiet" id="gallery-btn" aria-haspopup="dialog">
+          Snake gallery
+        </button>
         <button type="button" class="btn btn-quiet" id="summary-btn">Summary</button>
         <button type="button" class="btn btn-primary" id="new-btn">Log a sighting</button>
-      </div>
+        <p id="admin-status" class="admin-status" hidden>Moderating</p>
+        <button type="button" class="btn btn-quiet" id="admin-btn" hidden>Admin</button>
+      </nav>
     </header>
 
     <main class="layout">

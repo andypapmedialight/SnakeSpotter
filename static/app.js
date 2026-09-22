@@ -296,9 +296,10 @@
   }
 
   function openGallery() {
+    if (!els.galleryView) return;
     state.galleryPicking = isFormOpen();
-    show(els.galleryPickHint, state.galleryPicking);
-    highlightSpecies(els.species.value);
+    if (els.galleryPickHint) show(els.galleryPickHint, state.galleryPicking);
+    highlightSpecies(els.species ? els.species.value : "");
     if (!isGalleryOpen()) els.galleryView.showModal();
     document.body.classList.add("gallery-open");
   }
@@ -946,9 +947,9 @@
   els.detailBack.addEventListener("click", backToList);
   els.summaryBtn.addEventListener("click", openSummary);
   els.summaryBack.addEventListener("click", backToList);
-  els.galleryBtn.addEventListener("click", openGallery);
-  els.formGalleryBtn.addEventListener("click", openGallery);
-  els.galleryBack.addEventListener("click", closeGallery);
+  if (els.galleryBtn) els.galleryBtn.addEventListener("click", openGallery);
+  if (els.formGalleryBtn) els.formGalleryBtn.addEventListener("click", openGallery);
+  if (els.galleryBack) els.galleryBack.addEventListener("click", closeGallery);
   els.adminBtn.addEventListener("click", () => {
     if (state.adminSignedIn) {
       signOutAdmin();
