@@ -23,10 +23,10 @@
     "December",
   ];
   const mapArea = config.map || {
-    center: { lat: -37.735, lng: 144.9755 },
-    zoom: 16,
-    minZoom: 15,
-    bounds: { north: -37.7254, south: -37.7445, east: 144.9795, west: 144.9714 },
+    center: { lat: -37.7321, lng: 144.9755 },
+    zoom: 17,
+    minZoom: 14,
+    bounds: { north: -37.7254, south: -37.7445, east: 144.9926, west: 144.9632 },
   };
 
   const els = {
@@ -54,6 +54,7 @@
     observedAt: document.getElementById("observed-at"),
     latitude: document.getElementById("latitude"),
     longitude: document.getElementById("longitude"),
+    locateBtn: document.getElementById("locate-btn"),
     saveBtn: document.getElementById("save-btn"),
     newBtn: document.getElementById("new-btn"),
     emptyNewBtn: document.getElementById("empty-new-btn"),
@@ -113,6 +114,7 @@
     listError: "",
     mapsReady: false,
     mapsFailed: !config.mapsEnabled,
+    mapsAuthFailed: false,
     map: null,
     markers: [],
     markersById: new Map(),
@@ -126,6 +128,7 @@
     adminEnabled: Boolean(config.adminEnabled),
     adminSignedIn: false,
     pendingDeleteId: null,
+    locateRequest: 0,
   };
 
   function show(el, on = true) {
@@ -216,7 +219,7 @@
   function askRemoveSighting(sighting) {
     if (!sighting) return;
     state.pendingDeleteId = sighting.id;
-    els.confirmCopy.textContent = `${sighting.species} · ${formatWhen(sighting.observed_at)}. This cannot be undone.`;
+    els.confirmCopy.textContent = `${sighting.species}, ${formatObservedClock(sighting.observed_at)}. This cannot be undone.`;
     if (!isConfirmOpen()) els.confirmView.showModal();
   }
 
@@ -298,6 +301,11 @@
 
   function closeForm() {
     closeGallery();
+    state.locateRequest += 1;
+    if (els.locateBtn) {
+      els.locateBtn.disabled = false;
+      els.locateBtn.textContent = "Use current location";
+    }
     if (isFormOpen()) els.formView.close();
     document.body.classList.remove("form-open");
     show(els.mapHint, false);
@@ -350,6 +358,64 @@
       dateStyle: "medium",
       timeStyle: "short",
     });
+  }
+
+  function observedAsLocal(iso) {
+    if (!iso) return null;
+    // datetime-local is stored as a UTC wall clock. Read those numbers as local
+    // time so "2 hours ago" matches the clock the person entered.
+    const match = String(iso).match(
+      /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/
+    );
+    if (!match) {
+      const fallback = new Date(iso);
+      return Number.isNaN(fallback.getTime()) ? null : fallback;
+    }
+    return new Date(
+      Number(match[1]),
+      Number(match[2]) - 1,
+      Number(match[3]),
+      Number(match[4]),
+      Number(match[5]),
+      Number(match[6] || 0)
+    );
+  }
+
+  function formatObservedClock(iso) {
+    const date = observedAsLocal(iso);
+    if (!date) return iso || "";
+    return date.toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  }
+
+  function formatRelative(iso) {
+    const date = observedAsLocal(iso);
+    if (!date) return iso || "";
+    const seconds = Math.round((Date.now() - date.getTime()) / 1000);
+    const ahead = seconds < 0;
+    const abs = Math.abs(seconds);
+    const phrase = (count, unit) => {
+      const label = `${count} ${unit}${count === 1 ? "" : "s"}`;
+      return ahead ? `in ${label}` : `${label} ago`;
+    };
+    if (abs < 60) return "just now";
+    if (abs < 3600) return phrase(Math.floor(abs / 60), "minute");
+    if (abs < 86400) return phrase(Math.floor(abs / 3600), "hour");
+    return phrase(Math.floor(abs / 86400), "day");
+  }
+
+  function refreshRelativeTimes() {
+    for (const node of document.querySelectorAll("[data-observed]")) {
+      node.textContent = formatRelative(node.dataset.observed);
+    }
+    for (const sighting of state.sightings) {
+      const marker = state.markersById.get(sighting.id);
+      if (marker) {
+        marker.setTitle(`${sighting.species}, ${formatRelative(sighting.observed_at)}`);
+      }
+    }
   }
 
   function formatCoords(lat, lng) {
@@ -479,11 +545,11 @@
       const title = document.createElement("h3");
       title.textContent = sighting.species;
       const when = document.createElement("p");
-      when.textContent = `${formatWhen(sighting.observed_at)} · ${formatCoords(
-        sighting.latitude,
-        sighting.longitude
-      )}`;
-      button.append(title, makeVenomBadge(sighting.species), when);
+      when.className = "sighting-when";
+      when.dataset.observed = sighting.observed_at;
+      when.textContent = formatRelative(sighting.observed_at);
+      when.title = formatObservedClock(sighting.observed_at);
+      button.append(title, when, makeVenomBadge(sighting.species));
       button.addEventListener("click", () => openDetail(sighting.id));
       button.addEventListener("mouseenter", () => openInfoWindow(sighting));
       button.addEventListener("mouseleave", () => scheduleHoverClose());
@@ -681,14 +747,15 @@
     card.setAttribute("role", "button");
     card.tabIndex = 0;
 
-    const kicker = document.createElement("p");
-    kicker.className = "iw-kicker";
-    kicker.textContent = "Sighting";
-
     const title = document.createElement("h3");
     title.className = "iw-title";
     title.textContent = sighting.species;
-    card.append(kicker, title, makeVenomBadge(sighting.species));
+    const when = document.createElement("p");
+    when.className = "iw-when";
+    when.dataset.observed = sighting.observed_at;
+    when.textContent = formatRelative(sighting.observed_at);
+    when.title = formatObservedClock(sighting.observed_at);
+    card.append(title, when, makeVenomBadge(sighting.species));
 
     const match = speciesRecord(sighting.species);
     if (match && match.image && !/[\\/]/.test(match.image)) {
@@ -710,7 +777,7 @@
     const meta = document.createElement("dl");
     meta.className = "iw-meta";
     for (const [label, value] of [
-      ["Observed", formatWhen(sighting.observed_at)],
+      ["Observed", formatObservedClock(sighting.observed_at)],
       ["Location", formatCoords(sighting.latitude, sighting.longitude)],
       ["Logged", formatWhen(sighting.created_at)],
     ]) {
@@ -797,7 +864,10 @@
     state.markers = [];
     state.markersById.clear();
     for (const sighting of state.sightings) {
-      const marker = placeSnakeMarker({ lat: sighting.latitude, lng: sighting.longitude });
+      const marker = placeSnakeMarker(
+        { lat: sighting.latitude, lng: sighting.longitude },
+        `${sighting.species}, ${formatRelative(sighting.observed_at)}`
+      );
       marker.addListener("mouseover", () => openInfoWindow(sighting));
       marker.addListener("mouseout", () => scheduleHoverClose());
       marker.addListener("click", () => {
@@ -839,11 +909,17 @@
     }
   }
 
+  function mapsApiReady() {
+    return Boolean(window.__snakeMapsReady && window.google && google.maps && google.maps.Map);
+  }
+
   function initMap() {
-    if (state.mapsFailed || !window.google || !google.maps) {
+    if (state.map || state.mapsAuthFailed) return;
+    if (!mapsApiReady()) {
       showMapFallback();
       return;
     }
+    state.mapsFailed = false;
     state.mapsReady = true;
     show(els.mapFallback, false);
     show(els.mapsBanner, false);
@@ -854,7 +930,7 @@
       maxZoom: 19,
       restriction: {
         latLngBounds: mapArea.bounds,
-        strictBounds: true,
+        strictBounds: false,
       },
       mapTypeId: "terrain",
       streetViewControl: false,
@@ -868,6 +944,7 @@
       openForm({ reset: !isFormOpen() });
       setPickPosition(event.latLng.lat(), event.latLng.lng());
     });
+    google.maps.event.addListenerOnce(state.map, "idle", refreshMap);
     syncMapMarkers();
   }
 
@@ -936,7 +1013,7 @@
         els.detailSpeciesCredit.textContent = "";
         show(els.detailPhoto, false);
       }
-      els.detailWhen.textContent = formatWhen(sighting.observed_at);
+      els.detailWhen.textContent = formatObservedClock(sighting.observed_at);
       els.detailWhere.textContent = formatCoords(sighting.latitude, sighting.longitude);
       els.detailLogged.textContent = formatWhen(sighting.created_at);
       if (sighting.notes) {
@@ -1098,6 +1175,59 @@
   });
   els.species.addEventListener("input", () => highlightSpecies(els.species.value));
 
+  function useCurrentLocation() {
+    els.formError.hidden = true;
+    if (!navigator.geolocation) {
+      els.formError.textContent =
+        "This browser cannot share your location. Click the map or type coordinates.";
+      els.formError.hidden = false;
+      return;
+    }
+    const request = ++state.locateRequest;
+    els.locateBtn.disabled = true;
+    els.locateBtn.textContent = "Finding location…";
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (request !== state.locateRequest) return;
+        els.locateBtn.disabled = false;
+        els.locateBtn.textContent = "Use current location";
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        if (!inSurveyArea(latitude, longitude)) {
+          els.formError.textContent =
+            "Your location is outside Edgars Creek in Coburg North. Click the map or type coordinates in that area.";
+          els.formError.hidden = false;
+          return;
+        }
+        setPickPosition(latitude, longitude);
+        if (state.map) {
+          const spot = { lat: latitude, lng: longitude };
+          state.map.panTo(spot);
+          if (state.map.getZoom() < 16) state.map.setZoom(16);
+        }
+      },
+      (error) => {
+        if (request !== state.locateRequest) return;
+        els.locateBtn.disabled = false;
+        els.locateBtn.textContent = "Use current location";
+        if (error && error.code === 1) {
+          els.formError.textContent =
+            "Location access is off. Allow it in the browser, or click the map.";
+        } else if (error && error.code === 3) {
+          els.formError.textContent =
+            "Finding your location took too long. Try again, or click the map.";
+        } else {
+          els.formError.textContent =
+            "Current location is unavailable. Click the map or type coordinates.";
+        }
+        els.formError.hidden = false;
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  }
+
+  if (els.locateBtn) els.locateBtn.addEventListener("click", useCurrentLocation);
+
   els.latitude.addEventListener("change", () => {
     if (els.latitude.value && els.longitude.value) {
       setPickPosition(els.latitude.value, els.longitude.value);
@@ -1154,25 +1284,30 @@
     }
   });
 
+  function onMapsAuthFailure() {
+    if (state.mapsAuthFailed) return;
+    state.mapsAuthFailed = true;
+    showMapFallback(
+      "Google Maps could not load. Check GOOGLE_MAPS_API_KEY, then restart the app. You can still enter latitude and longitude."
+    );
+  }
+
   if (!config.mapsEnabled) {
     showMapFallback();
   } else {
-    window.addEventListener("google-maps-ready", initMap, { once: true });
-    window.addEventListener(
-      "google-maps-auth-failure",
-      () => {
-        showMapFallback(
-          "Google Maps could not load. Check GOOGLE_MAPS_API_KEY, then restart the app. You can still enter latitude and longitude."
-        );
-      },
-      { once: true }
-    );
+    window.addEventListener("google-maps-ready", initMap);
+    window.addEventListener("google-maps-auth-failure", onMapsAuthFailure);
+    if (window.__snakeMapsAuthFailed) onMapsAuthFailure();
+    else if (mapsApiReady()) initMap();
     window.setTimeout(() => {
-      if (!state.mapsReady && !state.mapsFailed) {
-        showMapFallback(
-          "Google Maps did not finish loading. Enter latitude and longitude to keep logging sightings."
-        );
+      if (state.map || state.mapsAuthFailed) return;
+      if (mapsApiReady()) {
+        initMap();
+        return;
       }
+      showMapFallback(
+        "Google Maps did not finish loading. Enter latitude and longitude to keep logging sightings."
+      );
     }, 8000);
   }
 
@@ -1180,4 +1315,5 @@
   applyAdminUi();
   refreshAdminSession();
   loadSightings();
+  window.setInterval(refreshRelativeTimes, 30000);
 })();

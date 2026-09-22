@@ -1,18 +1,19 @@
 # Edgars Creek, Coburg North: Photography Drive to Bell Street,
-# Newlands Road to Whitton Parade.
-# Photography Drive at Newlands Rd: about -37.7257, 144.9743.
-# Newlands Road in this band: about 144.9716 (west) to 144.9743 (north).
-# Whitton Parade: about 144.9783 to 144.9793.
-# Bell Street creek crossing: about -37.7424, 144.977.
+# Sydney Road (west) to Gilbert Road (east).
+# Sydney Road in this band: about 144.9636 (north) to 144.9665 (Bell Street).
+# Gilbert Road in this band: about 144.9891 (Bell Street) to 144.9922 (north).
+# Bounds sit just outside those centrelines so both roads stay on the map.
+# Centre: Edgars Creek beside Harold Stevens Athletics Track, Jackson Reserve.
+# The track is about -37.7321, 144.9758; the creek centreline there is 144.9755.
 NAME = "Edgars Creek, Coburg North"
-CENTER_LAT = -37.7350
+CENTER_LAT = -37.7321
 CENTER_LNG = 144.9755
-DEFAULT_ZOOM = 16
-MIN_ZOOM = 15
+DEFAULT_ZOOM = 17
+MIN_ZOOM = 14
 NORTH = -37.7254
 SOUTH = -37.7445
-WEST = 144.9714
-EAST = 144.9795
+WEST = 144.9632
+EAST = 144.9926
 
 # North-to-south creek stretches. A pin belongs to the first reach whose
 # south edge is still south of it.

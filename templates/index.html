@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="static/styles.css" />
+    <link rel="stylesheet" href="static/styles.css?v=11" />
   </head>
   <body>
     <a class="skip-link" href="#sidebar">Skip to sightings</a>
@@ -169,8 +169,8 @@
         <button type="button" class="btn btn-quiet" id="form-cancel">Close</button>
       </div>
       <p class="muted form-intro">
-        Species, notes, time, and a location around Edgars Creek. Click the map to set
-        the pin, or type latitude and longitude.
+        Species, notes, time, and a location around Edgars Creek. Click the map, use
+        your current location, or type latitude and longitude.
       </p>
       <form id="sighting-form" novalidate>
         <fieldset class="species-fieldset">
@@ -200,6 +200,9 @@
           Observed at
           <input id="observed-at" name="observed_at" type="datetime-local" required />
         </label>
+        <button type="button" class="btn btn-quiet btn-block" id="locate-btn">
+          Use current location
+        </button>
         <div class="coord-row">
           <label>
             Latitude
@@ -408,13 +411,15 @@
         },
       };
     </script>
-    <script src="static/app.js" defer></script>
+    <script src="static/app.js?v=9" defer></script>
     {% if maps_enabled %}
     <script>
       function initGoogleMaps() {
+        window.__snakeMapsReady = true;
         window.dispatchEvent(new Event("google-maps-ready"));
       }
       function gm_authFailure() {
+        window.__snakeMapsAuthFailed = true;
         window.dispatchEvent(new Event("google-maps-auth-failure"));
       }
     </script>
