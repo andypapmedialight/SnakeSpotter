@@ -460,6 +460,99 @@ code {
   margin-top: 0.22rem;
 }
 
+.gm-style .gm-style-iw-c {
+  padding: 10px 12px 12px !important;
+  border-radius: 10px !important;
+  box-shadow: var(--shadow) !important;
+}
+
+.gm-style .gm-style-iw-d {
+  overflow: auto !important;
+}
+
+.iw-card {
+  width: 248px;
+  max-width: min(248px, 72vw);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  padding-right: 0.4rem;
+}
+
+.iw-kicker {
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 1.4rem 0.15rem 0;
+}
+
+.iw-title {
+  font-size: 1.02rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin: 0 1.4rem 0.55rem 0;
+  line-height: 1.2;
+}
+
+.iw-photo {
+  margin: 0 0 0.55rem;
+}
+
+.iw-photo img {
+  width: 100%;
+  height: 7rem;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--canvas);
+}
+
+.iw-credit {
+  margin-top: 0.28rem;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.iw-meta {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+}
+
+.iw-meta div {
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.4rem 0.55rem;
+}
+
+.iw-meta dt {
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.iw-meta dd {
+  margin: 0.08rem 0 0;
+  font-size: 0.82rem;
+}
+
+.iw-notes {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  max-height: 5.6rem;
+  overflow: auto;
+}
+
+.iw-muted {
+  color: var(--muted);
+}
+
 form {
   display: grid;
   gap: 0.85rem;

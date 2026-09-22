@@ -56,6 +56,7 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 
 - Log a sighting (species or Unsure, notes, datetime, lat/lng)
 - See every sighting in a list
+- Roll over a pin (or a list row) to see the full sighting on the map
 - Open a sighting and jump to its pin
 - Click the map around Edgars Creek, Coburg North to drop a pin
 
