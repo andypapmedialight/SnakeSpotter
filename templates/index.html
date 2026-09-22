@@ -35,6 +35,7 @@
         Record snakes along Edgars Creek in Coburg North — what you saw, when, and where.
       </p>
       <div class="header-actions">
+        <button type="button" class="btn btn-quiet" id="gallery-btn">Gallery</button>
         <button type="button" class="btn btn-quiet" id="summary-btn">Summary</button>
         <button type="button" class="btn btn-primary" id="new-btn">Log a sighting</button>
       </div>
@@ -90,35 +91,11 @@
             <fieldset class="species-fieldset">
               <legend>Species</legend>
               <p class="field-hint">
-                Compare these photos with what you saw, then tap a match. Each card shows how
-                venomous that snake is. Choose Unsure if you don’t know.
+                Type a name or Unsure. Open the gallery if you want to compare photos.
               </p>
-              <div class="species-grid" id="species-picker">
-                {% for item in species %}
-                <button
-                  type="button"
-                  class="species-card"
-                  data-species="{{ item.name }}"
-                  aria-pressed="false"
-                >
-                  {% if item.image %}
-                  <img
-                    src="static/species/{{ item.image }}"
-                    alt="{{ item.name }}, {{ item.venom_label }}"
-                    width="400"
-                    height="250"
-                  />
-                  {% else %}
-                  <span class="species-card-empty">No photo — not sure which snake</span>
-                  {% endif %}
-                  <span class="species-card-name">{{ item.name }}</span>
-                  <span class="venom-badge venom-{{ item.venom_level }}">{{ item.venom_label }}</span>
-                  {% if item.credit and item.license %}
-                  <span class="species-card-credit">{{ item.credit }} · {{ item.license }}</span>
-                  {% endif %}
-                </button>
-                {% endfor %}
-              </div>
+              <button type="button" class="btn btn-quiet" id="form-gallery-btn">
+                Open snake gallery
+              </button>
               <input
                 id="species"
                 name="species"
@@ -181,6 +158,50 @@
               Save sighting
             </button>
           </form>
+        </section>
+
+        <section id="gallery-view" class="panel" hidden aria-labelledby="gallery-heading">
+          <div class="panel-head">
+            <button type="button" class="btn btn-ghost" id="gallery-back">Back</button>
+          </div>
+          <p class="eyebrow">Identification</p>
+          <h2 id="gallery-heading">Snake gallery</h2>
+          <p class="muted form-intro">
+            Photos and venom for snakes recorded along this creek. Open this when you want
+            to identify what you saw.
+          </p>
+          <p id="gallery-pick-hint" class="field-hint" hidden>
+            Tap a photo to set the species on your sighting.
+          </p>
+          <div class="species-grid gallery-grid" id="species-picker">
+            {% for item in species %}
+            <button
+              type="button"
+              class="species-card"
+              data-species="{{ item.name }}"
+              aria-pressed="false"
+            >
+              {% if item.image %}
+              <img
+                src="static/species/{{ item.image }}"
+                alt="{{ item.name }}, {{ item.venom_label }}"
+                width="400"
+                height="250"
+              />
+              {% else %}
+              <span class="species-card-empty">No photo — not sure which snake</span>
+              {% endif %}
+              <span class="species-card-name">{{ item.name }}</span>
+              <span class="venom-badge venom-{{ item.venom_level }}">{{ item.venom_label }}</span>
+              {% if item.venom_note %}
+              <span class="species-card-note">{{ item.venom_note }}</span>
+              {% endif %}
+              {% if item.credit and item.license %}
+              <span class="species-card-credit">{{ item.credit }} · {{ item.license }}</span>
+              {% endif %}
+            </button>
+            {% endfor %}
+          </div>
         </section>
 
         <section id="summary-view" class="panel" hidden aria-labelledby="summary-heading">

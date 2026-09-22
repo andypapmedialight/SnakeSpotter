@@ -39,6 +39,7 @@
     formView: document.getElementById("form-view"),
     detailView: document.getElementById("detail-view"),
     summaryView: document.getElementById("summary-view"),
+    galleryView: document.getElementById("gallery-view"),
     listLoading: document.getElementById("list-loading"),
     listError: document.getElementById("list-error"),
     listEmpty: document.getElementById("list-empty"),
@@ -56,6 +57,10 @@
     newBtn: document.getElementById("new-btn"),
     emptyNewBtn: document.getElementById("empty-new-btn"),
     formCancel: document.getElementById("form-cancel"),
+    galleryBtn: document.getElementById("gallery-btn"),
+    formGalleryBtn: document.getElementById("form-gallery-btn"),
+    galleryBack: document.getElementById("gallery-back"),
+    galleryPickHint: document.getElementById("gallery-pick-hint"),
     summaryBtn: document.getElementById("summary-btn"),
     summaryBack: document.getElementById("summary-back"),
     summaryEmptyNew: document.getElementById("summary-empty-new"),
@@ -100,6 +105,7 @@
     hoverCloseTimer: null,
     hoveredSightingId: null,
     stickySightingId: null,
+    galleryReturn: "list",
   };
 
   function show(el, on = true) {
@@ -122,8 +128,14 @@
     show(els.formView, mode === "form");
     show(els.detailView, mode === "detail");
     show(els.summaryView, mode === "summary");
-    show(els.mapHint, mode === "form" && state.mapsReady && !state.mapsFailed);
-    if (mode !== "form" && state.pickMarker) {
+    show(els.galleryView, mode === "gallery");
+    show(
+      els.mapHint,
+      (mode === "form" || (mode === "gallery" && state.galleryReturn === "form")) &&
+        state.mapsReady &&
+        !state.mapsFailed
+    );
+    if (mode !== "form" && mode !== "gallery" && state.pickMarker) {
       state.pickMarker.setMap(null);
       state.pickMarker = null;
     }
@@ -215,6 +227,7 @@
 
   function highlightSpecies(name) {
     const needle = (name || "").trim().toLowerCase();
+    if (!els.speciesPicker) return;
     for (const card of els.speciesPicker.querySelectorAll(".species-card")) {
       const match = card.dataset.species.toLowerCase() === needle;
       card.setAttribute("aria-pressed", match ? "true" : "false");
@@ -394,6 +407,29 @@
     closeInfoWindow({ force: true });
     setMode("summary");
     renderSummary();
+  }
+
+  function openGallery() {
+    const from = state.mode === "gallery" ? state.galleryReturn : state.mode;
+    state.galleryReturn = from === "gallery" ? "list" : from;
+    const picking = state.galleryReturn === "form";
+    show(els.galleryPickHint, picking);
+    highlightSpecies(els.species.value);
+    setMode("gallery");
+  }
+
+  function closeGallery() {
+    const target = state.galleryReturn || "list";
+    if (target === "summary") {
+      openSummary();
+      return;
+    }
+    if (target === "detail" && state.selectedId) {
+      openDetail(state.selectedId);
+      return;
+    }
+    setMode(target === "form" ? "form" : "list");
+    if (target !== "form") renderList();
   }
 
   function snakeIcon() {
@@ -746,12 +782,18 @@
   els.detailBack.addEventListener("click", backToList);
   els.summaryBtn.addEventListener("click", openSummary);
   els.summaryBack.addEventListener("click", backToList);
+  els.galleryBtn.addEventListener("click", openGallery);
+  els.formGalleryBtn.addEventListener("click", openGallery);
+  els.galleryBack.addEventListener("click", closeGallery);
 
   els.speciesPicker.addEventListener("click", (event) => {
     const card = event.target.closest(".species-card");
     if (!card) return;
-    els.species.value = card.dataset.species;
     highlightSpecies(card.dataset.species);
+    if (state.galleryReturn === "form") {
+      els.species.value = card.dataset.species;
+      setMode("form");
+    }
   });
   els.species.addEventListener("input", () => highlightSpecies(els.species.value));
 

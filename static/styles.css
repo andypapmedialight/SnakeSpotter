@@ -333,6 +333,30 @@ code {
   line-height: 1.3;
 }
 
+.species-card-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.gallery-grid {
+  grid-template-columns: 1fr;
+}
+
+.gallery-grid .species-card {
+  padding: 0.45rem;
+  gap: 0.35rem;
+}
+
+.gallery-grid .species-card img,
+.gallery-grid .species-card-empty {
+  height: 9rem;
+}
+
+.species-fieldset .btn-quiet {
+  justify-self: start;
+}
+
 .venom-badge {
   display: inline-block;
   width: fit-content;
