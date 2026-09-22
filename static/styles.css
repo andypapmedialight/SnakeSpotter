@@ -248,6 +248,98 @@ code {
   line-height: 1.35;
 }
 
+.species-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.species-fieldset legend {
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0;
+}
+
+.species-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.species-card {
+  display: grid;
+  gap: 0.28rem;
+  text-align: left;
+  padding: 0.35rem;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  border-radius: 8px;
+  color: inherit;
+  font: inherit;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.species-card:hover,
+.species-card:focus-visible {
+  border-color: var(--accent);
+}
+
+.species-card[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+  background: var(--accent-soft);
+}
+
+.species-card img {
+  width: 100%;
+  height: 5.4rem;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--canvas);
+}
+
+.species-card-empty {
+  display: grid;
+  place-items: center;
+  height: 5.4rem;
+  padding: 0.4rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.3;
+  background: var(--canvas);
+  border-radius: 6px;
+}
+
+.species-card-name {
+  font-weight: 600;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.species-card-credit {
+  font-size: 0.62rem;
+  color: var(--muted);
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.detail-photo {
+  margin: 0.85rem 0 0;
+}
+
+.detail-photo img {
+  width: 100%;
+  height: 9rem;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--canvas);
+}
+
 .btn {
   appearance: none;
   border: 0;

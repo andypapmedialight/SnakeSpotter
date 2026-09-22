@@ -61,6 +61,6 @@ Same four deploy secrets as the other Anthemic repos: `DEPLOY_HOST`, `DEPLOY_POR
 
 The map stays on that creek corridor, down to De Chene Reserve. Pins outside the area are rejected.
 
-The species list is snakes recorded around Edgars Creek and inner-north Melbourne: Eastern Brown, Tiger, Lowland Copperhead, Red-bellied Black, White-lipped, Little Whip, and Small-eyed. Unsure is always available.
+The species list is snakes recorded around Edgars Creek and inner-north Melbourne: Eastern Brown, Tiger, Lowland Copperhead, Red-bellied Black, White-lipped, Little Whip, and Small-eyed. Unsure is always available. Identification photos are Wikimedia Commons files; credits sit under each picture.
 
 Local data lives in `data/sightings.db`. Hub data lives in `/var/lib/snakespotter/sightings.db`.

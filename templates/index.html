@@ -86,8 +86,37 @@
             the pin, or type latitude and longitude.
           </p>
           <form id="sighting-form" novalidate>
-            <label>
-              Species
+            <fieldset class="species-fieldset">
+              <legend>Species</legend>
+              <p class="field-hint">
+                Compare these photos with what you saw, then tap a match. Choose Unsure if you
+                don’t know.
+              </p>
+              <div class="species-grid" id="species-picker">
+                {% for item in species %}
+                <button
+                  type="button"
+                  class="species-card"
+                  data-species="{{ item.name }}"
+                  aria-pressed="false"
+                >
+                  {% if item.image %}
+                  <img
+                    src="static/species/{{ item.image }}"
+                    alt="{{ item.name }}"
+                    width="400"
+                    height="250"
+                  />
+                  {% else %}
+                  <span class="species-card-empty">No photo — not sure which snake</span>
+                  {% endif %}
+                  <span class="species-card-name">{{ item.name }}</span>
+                  {% if item.credit and item.license %}
+                  <span class="species-card-credit">{{ item.credit }} · {{ item.license }}</span>
+                  {% endif %}
+                </button>
+                {% endfor %}
+              </div>
               <input
                 id="species"
                 name="species"
@@ -97,8 +126,7 @@
                 placeholder="Tiger snake, or Unsure"
                 list="species-suggestions"
               />
-              <span class="field-hint">Leave blank or choose Unsure if you don’t know.</span>
-            </label>
+            </fieldset>
             <datalist id="species-suggestions">
               {% for name in species_names %}
               <option value="{{ name }}"></option>
@@ -165,6 +193,10 @@
           <article id="detail-body" hidden>
             <p class="eyebrow">Sighting</p>
             <h2 id="detail-heading"></h2>
+            <figure id="detail-species-photo" class="detail-photo" hidden>
+              <img id="detail-species-img" alt="" />
+              <figcaption id="detail-species-credit" class="species-card-credit"></figcaption>
+            </figure>
             <dl class="detail-meta">
               <div>
                 <dt>Observed</dt>
@@ -188,6 +220,7 @@
     <script>
       window.SNAKESPOTTER = {
         mapsEnabled: {% if maps_enabled %}true{% else %}false{% endif %},
+        species: {{ species_json | safe }},
         map: {
           center: { lat: {{ area.CENTER_LAT }}, lng: {{ area.CENTER_LNG }} },
           zoom: {{ area.DEFAULT_ZOOM }},

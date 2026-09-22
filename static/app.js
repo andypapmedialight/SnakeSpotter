@@ -1,5 +1,6 @@
 (() => {
   const config = window.SNAKESPOTTER || { mapsEnabled: false };
+  const speciesCatalog = Array.isArray(config.species) ? config.species : [];
   const mapArea = config.map || {
     center: { lat: -37.7325, lng: 144.977 },
     zoom: 14,
@@ -24,6 +25,7 @@
     form: document.getElementById("sighting-form"),
     formError: document.getElementById("form-error"),
     species: document.getElementById("species"),
+    speciesPicker: document.getElementById("species-picker"),
     notes: document.getElementById("notes"),
     observedAt: document.getElementById("observed-at"),
     latitude: document.getElementById("latitude"),
@@ -37,6 +39,9 @@
     detailError: document.getElementById("detail-error"),
     detailBody: document.getElementById("detail-body"),
     detailHeading: document.getElementById("detail-heading"),
+    detailPhoto: document.getElementById("detail-species-photo"),
+    detailSpeciesImg: document.getElementById("detail-species-img"),
+    detailSpeciesCredit: document.getElementById("detail-species-credit"),
     detailWhen: document.getElementById("detail-when"),
     detailWhere: document.getElementById("detail-where"),
     detailLogged: document.getElementById("detail-logged"),
@@ -110,6 +115,20 @@
     els.formError.textContent = "";
     els.saveBtn.disabled = false;
     els.saveBtn.textContent = "Save sighting";
+    highlightSpecies("");
+  }
+
+  function speciesRecord(name) {
+    const needle = (name || "").trim().toLowerCase();
+    return speciesCatalog.find((item) => item.name.toLowerCase() === needle) || null;
+  }
+
+  function highlightSpecies(name) {
+    const needle = (name || "").trim().toLowerCase();
+    for (const card of els.speciesPicker.querySelectorAll(".species-card")) {
+      const match = card.dataset.species.toLowerCase() === needle;
+      card.setAttribute("aria-pressed", match ? "true" : "false");
+    }
   }
 
   function parseApiError(payload, fallback) {
@@ -299,6 +318,19 @@
     try {
       const sighting = await fetchJson(`api/sightings/${id}`);
       els.detailHeading.textContent = sighting.species;
+      const match = speciesRecord(sighting.species);
+      if (match && match.image) {
+        els.detailSpeciesImg.src = `static/species/${match.image}`;
+        els.detailSpeciesImg.alt = match.name;
+        els.detailSpeciesCredit.textContent =
+          match.credit && match.license ? `${match.credit} · ${match.license}` : "";
+        show(els.detailPhoto, true);
+      } else {
+        els.detailSpeciesImg.removeAttribute("src");
+        els.detailSpeciesImg.alt = "";
+        els.detailSpeciesCredit.textContent = "";
+        show(els.detailPhoto, false);
+      }
       els.detailWhen.textContent = formatWhen(sighting.observed_at);
       els.detailWhere.textContent = formatCoords(sighting.latitude, sighting.longitude);
       els.detailLogged.textContent = formatWhen(sighting.created_at);
@@ -329,6 +361,14 @@
   els.emptyNewBtn.addEventListener("click", openForm);
   els.formCancel.addEventListener("click", backToList);
   els.detailBack.addEventListener("click", backToList);
+
+  els.speciesPicker.addEventListener("click", (event) => {
+    const card = event.target.closest(".species-card");
+    if (!card) return;
+    els.species.value = card.dataset.species;
+    highlightSpecies(card.dataset.species);
+  });
+  els.species.addEventListener("input", () => highlightSpecies(els.species.value));
 
   els.latitude.addEventListener("change", () => {
     if (els.latitude.value && els.longitude.value) {

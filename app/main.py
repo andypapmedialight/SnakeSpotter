@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from json import dumps
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -41,6 +42,8 @@ def home(request: Request) -> HTMLResponse:
             "maps_enabled": settings.maps_enabled,
             "area": area,
             "species_names": species.NAMES,
+            "species": species.SPECIES,
+            "species_json": dumps(species.SPECIES),
         },
     )
 
