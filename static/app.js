@@ -1,10 +1,10 @@
 (() => {
   const config = window.SNAKESPOTTER || { mapsEnabled: false };
   const mapArea = config.map || {
-    center: { lat: -37.72455, lng: 144.97949 },
+    center: { lat: -37.7285, lng: 144.977 },
     zoom: 15,
-    minZoom: 14,
-    bounds: { north: -37.7125, south: -37.738, east: 144.993, west: 144.969 },
+    minZoom: 13,
+    bounds: { north: -37.7125, south: -37.746, east: 144.993, west: 144.963 },
   };
 
   const els = {

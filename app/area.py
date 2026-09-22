@@ -1,13 +1,13 @@
-# Edgars Creek through Coburg North, padded to nearby streets,
-# Cash Reserve, and the Merri Creek confluence.
+# Edgars Creek through Coburg North, including the Merri Creek junction.
+# Confluence is the Coburg Fishway / weir, about -37.7350, 144.9718.
 NAME = "Edgars Creek, Coburg North"
-CENTER_LAT = -37.72455
-CENTER_LNG = 144.97949
+CENTER_LAT = -37.7285
+CENTER_LNG = 144.9770
 DEFAULT_ZOOM = 15
-MIN_ZOOM = 14
+MIN_ZOOM = 13
 NORTH = -37.7125
-SOUTH = -37.7380
-WEST = 144.9690
+SOUTH = -37.7460
+WEST = 144.9630
 EAST = 144.9930
 
 
