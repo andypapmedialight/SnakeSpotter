@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SnakeSpotter</title>
+    <meta
+      name="description"
+      content="Log snake sightings with species, notes, time, and a map pin."
+    />
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Figtree:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#sidebar">Skip to sightings</a>
+
+    <div id="maps-banner" class="banner" hidden role="status">
+      Google Maps is offline because <code>GOOGLE_MAPS_API_KEY</code> is not set.
+      You can still log a sighting by entering latitude and longitude.
+    </div>
+    <div id="app-banner" class="banner banner-error" hidden role="alert"></div>
+
+    <header class="site-header">
+      <div class="brand">
+        <img src="/static/favicon.svg" alt="" width="36" height="36" />
+        <div>
+          <p class="eyebrow">Field log</p>
+          <h1>SnakeSpotter</h1>
+        </div>
+      </div>
+      <p class="lede">
+        Record where you saw a snake, what it was, and when — then pin it on the map.
+      </p>
+      <button type="button" class="btn btn-primary" id="new-btn">
+        Log a sighting
+      </button>
+    </header>
+
+    <main class="layout">
+      <section class="map-pane" aria-label="Sighting map">
+        <div id="map" class="map" role="application" aria-label="Google Map"></div>
+        <div id="map-fallback" class="map-fallback" hidden>
+          <svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              d="M12 44c8-18 32-18 40 0M20 28c4-8 20-8 24 0"
+            />
+            <circle cx="32" cy="18" r="4" fill="currentColor" />
+          </svg>
+          <h2>Map unavailable</h2>
+          <p>
+            Add a Google Maps JavaScript API key as <code>GOOGLE_MAPS_API_KEY</code>
+            to pick locations by clicking the map. Until then, type coordinates in the form.
+          </p>
+        </div>
+        <p id="map-hint" class="map-hint" hidden>Click the map to drop a pin.</p>
+      </section>
+
+      <aside id="sidebar" class="sidebar">
+        <section id="list-view" class="panel" aria-labelledby="list-heading">
+          <div class="panel-head">
+            <h2 id="list-heading">Sightings</h2>
+            <p id="list-count" class="muted"></p>
+          </div>
+          <div id="list-loading" class="state" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            Loading sightings…
+          </div>
+          <div id="list-error" class="state state-error" hidden></div>
+          <div id="list-empty" class="state empty" hidden>
+            <h3>No sightings yet</h3>
+            <p>Pin your first snake on the map, or log coordinates by hand.</p>
+            <button type="button" class="btn btn-primary" id="empty-new-btn">
+              Log a sighting
+            </button>
+          </div>
+          <ul id="sighting-list" class="sighting-list"></ul>
+        </section>
+
+        <section id="form-view" class="panel" hidden aria-labelledby="form-heading">
+          <div class="panel-head">
+            <h2 id="form-heading">New sighting</h2>
+            <button type="button" class="btn btn-ghost" id="form-cancel">Cancel</button>
+          </div>
+          <p class="muted form-intro">
+            Species, notes, time, and a location. Click the map to set the pin, or type
+            latitude and longitude.
+          </p>
+          <form id="sighting-form" novalidate>
+            <label>
+              Species
+              <input
+                id="species"
+                name="species"
+                type="text"
+                maxlength="120"
+                required
+                autocomplete="off"
+                placeholder="Eastern brown, garter, carpet python…"
+                list="species-suggestions"
+              />
+            </label>
+            <datalist id="species-suggestions">
+              <option value="Eastern Brown Snake"></option>
+              <option value="Red-bellied Black Snake"></option>
+              <option value="Tiger Snake"></option>
+              <option value="Carpet Python"></option>
+              <option value="Coastal Taipan"></option>
+              <option value="Garter Snake"></option>
+              <option value="Western Diamondback Rattlesnake"></option>
+              <option value="Copperhead"></option>
+              <option value="Cottonmouth"></option>
+              <option value="Corn Snake"></option>
+              <option value="King Cobra"></option>
+              <option value="Ball Python"></option>
+            </datalist>
+            <label>
+              Observed at
+              <input id="observed-at" name="observed_at" type="datetime-local" required />
+            </label>
+            <div class="coord-row">
+              <label>
+                Latitude
+                <input
+                  id="latitude"
+                  name="latitude"
+                  type="number"
+                  step="0.000001"
+                  min="-90"
+                  max="90"
+                  required
+                  placeholder="-33.8688"
+                />
+              </label>
+              <label>
+                Longitude
+                <input
+                  id="longitude"
+                  name="longitude"
+                  type="number"
+                  step="0.000001"
+                  min="-180"
+                  max="180"
+                  required
+                  placeholder="151.2093"
+                />
+              </label>
+            </div>
+            <label>
+              Notes
+              <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                maxlength="4000"
+                placeholder="Crossing a trail, basking on rock, length estimate…"
+              ></textarea>
+            </label>
+            <p id="form-error" class="field-error" hidden></p>
+            <button type="submit" class="btn btn-primary btn-block" id="save-btn">
+              Save sighting
+            </button>
+          </form>
+        </section>
+
+        <section id="detail-view" class="panel" hidden aria-labelledby="detail-heading">
+          <div class="panel-head">
+            <button type="button" class="btn btn-ghost" id="detail-back">All sightings</button>
+          </div>
+          <div id="detail-loading" class="state" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            Loading sighting…
+          </div>
+          <div id="detail-error" class="state state-error" hidden></div>
+          <article id="detail-body" hidden>
+            <p class="eyebrow">Sighting</p>
+            <h2 id="detail-heading"></h2>
+            <dl class="detail-meta">
+              <div>
+                <dt>Observed</dt>
+                <dd id="detail-when"></dd>
+              </div>
+              <div>
+                <dt>Location</dt>
+                <dd id="detail-where"></dd>
+              </div>
+              <div>
+                <dt>Logged</dt>
+                <dd id="detail-logged"></dd>
+              </div>
+            </dl>
+            <p id="detail-notes" class="notes"></p>
+          </article>
+        </section>
+      </aside>
+    </main>
+
+    <script>
+      window.SNAKESPOTTER = {
+        mapsEnabled: {% if maps_enabled %}true{% else %}false{% endif %},
+      };
+    </script>
+    <script src="/static/app.js" defer></script>
+    {% if maps_enabled %}
+    <script>
+      function initGoogleMaps() {
+        window.dispatchEvent(new Event("google-maps-ready"));
+      }
+      function gm_authFailure() {
+        window.dispatchEvent(new Event("google-maps-auth-failure"));
+      }
+    </script>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initGoogleMaps"
+      async
+      defer
+    ></script>
+    {% endif %}
+  </body>
+</html>
