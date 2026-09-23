@@ -80,6 +80,10 @@
     confirmOk: document.getElementById("confirm-ok"),
     detailRemove: document.getElementById("detail-remove"),
     summaryBtn: document.getElementById("summary-btn"),
+    heatBtn: document.getElementById("heat-btn"),
+    heatLegend: document.getElementById("heat-legend"),
+    heatRadius: document.getElementById("heat-radius"),
+    heatRadiusLabel: document.getElementById("heat-radius-label"),
     summaryBack: document.getElementById("summary-back"),
     summaryEmptyNew: document.getElementById("summary-empty-new"),
     summaryTotal: document.getElementById("summary-total"),
@@ -127,6 +131,9 @@
     galleryPicking: false,
     adminEnabled: Boolean(config.adminEnabled),
     adminSignedIn: false,
+    heatOn: false,
+    heatRadius: 45,
+    heatOverlay: null,
     pendingDeleteId: null,
     locateRequest: 0,
   };
@@ -858,6 +865,170 @@
     }
   }
 
+  // ponytail: 20–100m slider, same canvas blot as SWARM. Weight by venom only if that distinction matters.
+  const HEAT_GRADIENT = [
+    "rgba(102, 255, 0, 0)",
+    "rgba(102, 255, 0, 1)",
+    "rgba(147, 255, 0, 1)",
+    "rgba(193, 255, 0, 1)",
+    "rgba(238, 255, 0, 1)",
+    "rgba(244, 227, 0, 1)",
+    "rgba(249, 198, 0, 1)",
+    "rgba(255, 170, 0, 1)",
+    "rgba(255, 113, 0, 1)",
+    "rgba(255, 57, 0, 1)",
+    "rgba(255, 0, 0, 1)",
+  ];
+
+  function heatPalette() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 1;
+    const ctx = canvas.getContext("2d");
+    const grd = ctx.createLinearGradient(0, 0, 256, 0);
+    HEAT_GRADIENT.forEach((color, index) => {
+      grd.addColorStop(index / (HEAT_GRADIENT.length - 1), color);
+    });
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 256, 1);
+    return ctx.getImageData(0, 0, 256, 1).data;
+  }
+
+  function metersToPixels(meters, lat, zoom) {
+    const metersPerPixel = (156543.03392 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom;
+    return meters / metersPerPixel;
+  }
+
+  function createHeatOverlay(map, points) {
+    const palette = heatPalette();
+    const Overlay = class extends google.maps.OverlayView {
+      constructor() {
+        super();
+        this.points = points;
+        this.radiusMeters = state.heatRadius;
+        this.opacity = 0.8;
+      }
+
+      onAdd() {
+        this.container = document.createElement("div");
+        this.container.style.position = "absolute";
+        this.container.style.pointerEvents = "none";
+        this.canvas = document.createElement("canvas");
+        this.shadow = document.createElement("canvas");
+        this.container.appendChild(this.canvas);
+        this.getPanes().overlayLayer.appendChild(this.container);
+        const redraw = () => this.draw();
+        this.listeners = [
+          this.getMap().addListener("bounds_changed", redraw),
+          this.getMap().addListener("zoom_changed", redraw),
+          this.getMap().addListener("idle", redraw),
+        ];
+        this.draw();
+      }
+
+      onRemove() {
+        for (const listener of this.listeners || []) listener.remove();
+        this.listeners = [];
+        if (this.container && this.container.parentNode) this.container.parentNode.removeChild(this.container);
+        this.container = null;
+        this.canvas = null;
+        this.shadow = null;
+      }
+
+      draw() {
+        if (!this.canvas || !this.getMap()) return;
+        const projection = this.getProjection();
+        const bounds = this.getMap().getBounds();
+        if (!projection || !bounds) return;
+        const ne = projection.fromLatLngToDivPixel(bounds.getNorthEast());
+        const sw = projection.fromLatLngToDivPixel(bounds.getSouthWest());
+        if (!ne || !sw) return;
+        const width = Math.max(1, Math.ceil(ne.x - sw.x));
+        const height = Math.max(1, Math.ceil(sw.y - ne.y));
+        this.container.style.left = `${sw.x}px`;
+        this.container.style.top = `${ne.y}px`;
+        this.container.style.width = `${width}px`;
+        this.container.style.height = `${height}px`;
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.shadow.width = width;
+        this.shadow.height = height;
+        const shadowCtx = this.shadow.getContext("2d");
+        const ctx = this.canvas.getContext("2d");
+        shadowCtx.clearRect(0, 0, width, height);
+        ctx.clearRect(0, 0, width, height);
+        if (!this.points.length) return;
+        const zoom = this.getMap().getZoom();
+        const centerLat = this.getMap().getCenter() ? this.getMap().getCenter().lat() : this.points[0].lat;
+        const radiusPx = Math.max(8, metersToPixels(this.radiusMeters, centerLat, zoom));
+        shadowCtx.globalCompositeOperation = "lighter";
+        for (const point of this.points) {
+          const pixel = projection.fromLatLngToDivPixel(new google.maps.LatLng(point.lat, point.lng));
+          if (!pixel) continue;
+          const x = pixel.x - sw.x;
+          const y = pixel.y - ne.y;
+          const gradient = shadowCtx.createRadialGradient(x, y, 0, x, y, radiusPx);
+          gradient.addColorStop(0, "rgba(0,0,0,1)");
+          gradient.addColorStop(0.4, "rgba(0,0,0,0.6)");
+          gradient.addColorStop(1, "rgba(0,0,0,0)");
+          shadowCtx.fillStyle = gradient;
+          shadowCtx.beginPath();
+          shadowCtx.arc(x, y, radiusPx, 0, Math.PI * 2);
+          shadowCtx.fill();
+        }
+        const shadowData = shadowCtx.getImageData(0, 0, width, height);
+        const colored = ctx.createImageData(width, height);
+        const src = shadowData.data;
+        const dest = colored.data;
+        for (let i = 0; i < src.length; i += 4) {
+          const alpha = src[i + 3];
+          if (!alpha) continue;
+          const idx = alpha * 4;
+          dest[i] = palette[idx];
+          dest[i + 1] = palette[idx + 1];
+          dest[i + 2] = palette[idx + 2];
+          dest[i + 3] = Math.round(alpha * this.opacity);
+        }
+        ctx.putImageData(colored, 0, 0);
+      }
+
+      setData(next) {
+        this.points = next;
+        this.draw();
+      }
+
+      setRadius(radiusMeters) {
+        this.radiusMeters = radiusMeters;
+        this.draw();
+      }
+    };
+    const overlay = new Overlay();
+    overlay.setMap(map);
+    return overlay;
+  }
+
+  function syncHeatmap() {
+    if (els.heatBtn) els.heatBtn.setAttribute("aria-pressed", state.heatOn ? "true" : "false");
+    const showHeat = state.heatOn && state.map && !state.mapsFailed;
+    show(els.heatLegend, showHeat);
+    if (!showHeat) {
+      if (state.heatOverlay) {
+        state.heatOverlay.setMap(null);
+        state.heatOverlay = null;
+      }
+      return;
+    }
+    const points = mappedSightings().map((sighting) => ({
+      lat: sighting.latitude,
+      lng: sighting.longitude,
+    }));
+    if (!state.heatOverlay) state.heatOverlay = createHeatOverlay(state.map, points);
+    else {
+      state.heatOverlay.setData(points);
+      state.heatOverlay.setRadius(state.heatRadius);
+    }
+  }
+
   function syncMapMarkers() {
     if (!state.map || !window.google || !google.maps) return;
     for (const marker of state.markers) marker.setMap(null);
@@ -952,6 +1123,7 @@
     });
     google.maps.event.addListenerOnce(state.map, "idle", refreshMap);
     syncMapMarkers();
+    syncHeatmap();
   }
 
   function showMapFallback(message) {
@@ -961,6 +1133,7 @@
     show(els.mapHint, false);
     show(els.mapsBanner, true);
     if (message) els.mapsBanner.textContent = message;
+    syncHeatmap();
   }
 
   async function loadSightings() {
@@ -979,6 +1152,7 @@
       renderList();
       renderSummary();
       syncMapMarkers();
+      syncHeatmap();
     }
   }
 
@@ -1056,6 +1230,19 @@
   els.formCancel.addEventListener("click", closeForm);
   els.detailBack.addEventListener("click", backToList);
   els.summaryBtn.addEventListener("click", openSummary);
+  if (els.heatBtn) {
+    els.heatBtn.addEventListener("click", () => {
+      state.heatOn = !state.heatOn;
+      syncHeatmap();
+    });
+  }
+  if (els.heatRadius) {
+    els.heatRadius.addEventListener("input", () => {
+      state.heatRadius = Number(els.heatRadius.value);
+      if (els.heatRadiusLabel) els.heatRadiusLabel.textContent = `Radius: ${state.heatRadius}m`;
+      if (state.heatOverlay) state.heatOverlay.setRadius(state.heatRadius);
+    });
+  }
   els.summaryBack.addEventListener("click", backToList);
   if (els.galleryBtn) els.galleryBtn.addEventListener("click", openGallery);
   if (els.formGalleryBtn) els.formGalleryBtn.addEventListener("click", openGallery);

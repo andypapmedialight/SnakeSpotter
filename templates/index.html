@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="static/styles.css?v=11" />
+    <link rel="stylesheet" href="static/styles.css?v=13" />
   </head>
   <body>
     <a class="skip-link" href="#sidebar">Skip to sightings</a>
@@ -42,6 +42,7 @@
           Safety
         </button>
         <button type="button" class="btn btn-quiet" id="summary-btn">Summary</button>
+        <button type="button" class="btn btn-quiet" id="heat-btn" aria-pressed="false">Display heat map</button>
         <button type="button" class="btn btn-primary" id="new-btn">Log a sighting</button>
         <p id="admin-status" class="admin-status" hidden>Moderating</p>
         <button type="button" class="btn btn-quiet" id="admin-btn" hidden>Admin</button>
@@ -62,6 +63,15 @@
           </div>
         </div>
         <p id="map-hint" class="map-hint" hidden>Click the map around Edgars Creek to drop a pin.</p>
+        <div id="heat-legend" class="heat-legend" hidden>
+          <p class="heat-legend-title">Snake traffic</p>
+          <div class="heat-scale" aria-hidden="true"></div>
+          <div class="heat-scale-labels"><span>Few</span><span>Many</span></div>
+          <label class="heat-radius">
+            <span id="heat-radius-label">Radius: 45m</span>
+            <input id="heat-radius" type="range" min="20" max="100" step="5" value="45" />
+          </label>
+        </div>
       </section>
 
       <aside id="sidebar" class="sidebar">
@@ -411,7 +421,7 @@
         },
       };
     </script>
-    <script src="static/app.js?v=12" defer></script>
+    <script src="static/app.js?v=14" defer></script>
     {% if maps_enabled %}
     <script>
       function initGoogleMaps() {
